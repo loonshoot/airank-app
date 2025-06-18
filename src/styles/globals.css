@@ -1,0 +1,118 @@
+@import 'react-querybuilder/dist/query-builder-layout.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  /* Use Fira Code font family */
+  font-family: var(--font-fira), 'Fira Code', monospace;
+}
+
+/* Query Builder Styles */
+.queryBuilder {
+  --rqb-spacing: 0.75rem;
+  --rqb-border-width: 1px;
+  --rqb-border-radius: 0;
+  
+  color: #ffffff;
+}
+
+.queryBuilder .ruleGroup {
+  background-color: transparent;
+  border: none;
+}
+
+.queryBuilder .ruleGroup .ruleGroup {
+  background-color: transparent;
+  border-color: #ffffff;
+  border-style: dashed;
+}
+
+.queryBuilder .ruleGroup-header {
+  background-color: transparent;
+  padding: 0.5rem;
+  border-radius: 0;
+}
+
+.queryBuilder .ruleGroup-body {
+  padding: 1rem;
+  border: none;
+}
+
+.queryBuilder .ruleGroup-combinators {
+  background-color: transparent;
+  border: 1px solid #ffffff;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 0.25rem 0.5rem;
+}
+
+.queryBuilder .ruleGroup-combinators option {
+  background-color: #1f2937;
+  color: #ffffff;
+}
+
+.queryBuilder .rule {
+  background-color: transparent;
+  border-radius: 0;
+  padding: 0.5rem;
+}
+
+.queryBuilder .rule select,
+.queryBuilder .rule input {
+  background-color: transparent;
+  border: 1px solid #ffffff;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 0.25rem 0.5rem;
+}
+
+.queryBuilder .rule select:focus,
+.queryBuilder .rule input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.queryBuilder .rule select:disabled,
+.queryBuilder .rule input:disabled {
+  background-color: transparent;
+  border-color: #6b7280;
+  color: #9ca3af;
+  opacity: 1;
+  cursor: not-allowed;
+}
+
+.queryBuilder button {
+  background-color: transparent;
+  border: 1px solid #ffffff;
+  color: #ffffff;
+  border-radius: 0;
+  padding: 0.25rem 0.5rem;
+}
+
+.queryBuilder button.rule-remove {
+  border: none;
+  color: #ef4444;
+  padding: 0.25rem;
+}
+
+.queryBuilder button:hover:not(:disabled) {
+  background-color: #6b7280;
+}
+
+.queryBuilder button.rule-remove:hover:not(:disabled) {
+  background-color: transparent;
+  color: #dc2626;
+}
+
+.queryBuilder button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.queryBuilder-branches .ruleGroup-body {
+  border-left: none;
+  margin-left: 0;
+  padding-left: var(--rqb-spacing);
+}

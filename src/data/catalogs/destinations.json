@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Model Context Protocol (MCP)",
+        "destinationJobs": [],
+        "author": "Outrun",
+        "logo": "https://cdn.getoutrun.com/integrations/mcp/logo.webp",
+        "icon": "https://cdn.getoutrun.com/integrations/mcp/icon.png",
+        "path": "/{{workspaceSlug}}/destinations/add/mcp",
+        "priority": 0,
+        "description": "Provide AI models with read-only access to your workspace data"
+    },
+    {
+        "name": "HubSpot",
+        "destinationJobs": ["hubspotDestination"],
+        "author": "Outrun",
+        "logo": "https://cdn.getoutrun.com/integrations/hubspot/logo.webp",
+        "icon": "https://cdn.getoutrun.com/integrations/hubspot/icon.png",
+        "path": "/{{workspaceSlug}}/destinations/add/hubspot",
+        "priority": 2,
+        "description": "Send data to HubSpot marketing platform"
+    },
+    {
+        "name": "Salesforce",
+        "destinationJobs": ["salesforceDestination"],
+        "author": "Outrun",
+        "logo": "https://cdn.getoutrun.com/integrations/salesforce/logo.webp",
+        "icon": "https://cdn.getoutrun.com/integrations/salesforce/icon.png",
+        "path": "/{{workspaceSlug}}/destinations/add/salesforce",
+        "priority": 1,
+        "description": "Send data to Salesforce CRM"
+    },
+    {
+        "name": "Zoho CRM",
+        "destinationJobs": ["zohocrmDestination"],
+        "author": "Outrun",
+        "logo": "https://cdn.getoutrun.com/integrations/zoho/logo.png",
+        "icon": "https://cdn.getoutrun.com/integrations/zoho/logo.png",
+        "path": "/{{workspaceSlug}}/destinations/add/zohocrm",
+        "priority": 3,
+        "description": "Send data to Zoho CRM"
+    }
+]
