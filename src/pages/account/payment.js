@@ -13,7 +13,7 @@ const Payment = () => {
       <div className="w-full py-5">
         <div className="relative flex flex-col mx-auto space-y-5">
           <div className="flex flex-col items-center justify-center pt-10 pb-5 mx-auto">
-            <h1 className="text-5xl font-bold text-center text-pink-600">
+            <h1 className="text-5xl font-bold text-center text-green-600">
               <span className="block">Subscription Purchase:</span>
               <span
                 className={`block ${

@@ -49,7 +49,7 @@ const Hero = () => {
           </div>
         </header>
         <div className="flex flex-col items-center justify-center pt-10 mx-auto md:w-3/5">
-          <h1 className="text-6xl font-extrabold text-center text-pink-600">
+          <h1 className="text-6xl font-extrabold text-center text-green-600">
             <span className="block">Build SaaS platforms</span>
             <span className="block text-blue-600">like never before</span>
           </h1>

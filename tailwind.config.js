@@ -29,6 +29,9 @@ module.exports = {
       'pink': {
         600: '#FE0170',
       },
+      'green': {
+        600: '#51F72B',
+      },
       'yellow': {
         400: '#FFC403',
       },
@@ -47,8 +50,8 @@ module.exports = {
       'grey': {
         200: '#7A8488',
       },
-      'light': "#FFFFFF",
-      'dark': "#1B1237"
+      'light': "#F3FAF0",
+      'dark': "#101624"
     },
   },
   plugins: [],

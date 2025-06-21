@@ -22,7 +22,7 @@ const AccountLayout = ({ children, routerType }) => {
 
   if (status === 'loading') return <></>;
   return (
-    <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row bg-dark dark:bg-dark">
+    <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
       <Sidebar menu={menu(workspace?.slug)} routerType={routerType} />
       <Content>
         <Header routerType={routerType} />

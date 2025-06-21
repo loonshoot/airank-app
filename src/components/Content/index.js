@@ -31,7 +31,7 @@ Content.Empty = ({ children }) => {
 Content.Title = ({ subtitle, title }) => {
   return (
     <div>
-      <h1 className="text-3xl font-bold md:text-4xl text-pink-600">{title}</h1>
+      <h1 className="text-3xl font-bold md:text-4xl text-green-600">{title}</h1>
       <h3 className="text-light mt-4">{subtitle}</h3>
     </div>
   );

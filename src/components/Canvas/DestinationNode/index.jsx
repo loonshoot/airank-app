@@ -25,7 +25,7 @@ function DestinationNode({ id, data, isConnectable, }) {
       <Handle type="target" position={Position.Top} isConnectable={isConnectable} />
       <div className="flex justify-end" onClick={() => setActiveWorkflowItem(true)}>
         <PencilSquareIcon 
-          className={`w-5 h-5 m-2 cursor-pointer hover:text-pink-600`}
+          className={`w-5 h-5 m-2 cursor-pointer hover:text-green-600`}
         />
       </div>
       <div className="pt-0 p-6">

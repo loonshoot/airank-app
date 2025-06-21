@@ -69,7 +69,7 @@ const Login = () => {
           />
         </div>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-pink-600">{t('login.label')}</h1>
+          <h1 className="text-2xl font-bold text-green-600">{t('login.label')}</h1>
           <h2 className="text-gray-600 pt-2">
             {t('login.message.magiclink')}
           </h2>

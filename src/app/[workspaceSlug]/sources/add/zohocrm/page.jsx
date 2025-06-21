@@ -651,7 +651,7 @@ export default function ZohoCRMSourcePage({ params }) {
             </Card.Body>
             <Card.Footer>
               <a 
-                className="mb-4 inline-block text-light hover:text-pink-600 cursor-pointer"
+                className="mb-4 inline-block text-light hover:text-green-600 cursor-pointer"
                 onClick={handleBack}
               >
                 <p>{t("common.action.back") || "< Back"}</p>
@@ -697,7 +697,7 @@ export default function ZohoCRMSourcePage({ params }) {
             </Card.Body>
             <Card.Footer>
               <a 
-                className="mb-4 inline-block text-light hover:text-pink-600 cursor-pointer"
+                className="mb-4 inline-block text-light hover:text-green-600 cursor-pointer"
                 onClick={handleBack} 
               >
                 <p>{t("common.action.back") || "< Back"}</p>
@@ -742,7 +742,7 @@ export default function ZohoCRMSourcePage({ params }) {
             </Card.Body>
             <Card.Footer>
               <a 
-                className="mb-4 inline-block text-light hover:text-pink-600 cursor-pointer"
+                className="mb-4 inline-block text-light hover:text-green-600 cursor-pointer"
                 onClick={handleBack} 
               >
                 <p>{t("common.action.back") || "< Back"}</p>

@@ -205,7 +205,7 @@ const Actions = ({ routerType }) => {
                   <Listbox.Option
                     key={index}
                     className={({ active }) =>
-                      `${active ? 'text-pink-600 bg-blue-200' : 'text-dark'}
+                      `${active ? 'text-green-600 bg-blue-200' : 'text-dark'}
                         border-2 border-dark cursor-pointer select-none relative py-2 pl-4 pr-4`
                     }
                     value={ws}
@@ -236,7 +236,7 @@ const Actions = ({ routerType }) => {
                 <Listbox.Option
                   onClick={toggleModal}
                   className={({ active }) =>
-                    `${active ? 'text-pink-600 bg-blue-200' : 'text-light'}
+                    `${active ? 'text-green-600 bg-blue-200' : 'text-light'}
                       border-2 border-dark cursor-pointer bg-dark select-none relative py-4 pl-4`
                   }
                   value={workspace}

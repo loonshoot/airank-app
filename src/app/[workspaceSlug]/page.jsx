@@ -63,7 +63,7 @@ export default function WorkspacePage({ params }) {
 
   if (status === 'loading' || isLoading) {
     return (
-      <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row bg-dark dark:bg-dark">
+      <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
         <div className="flex items-center justify-center w-full h-screen">
           <div className="text-center">
             <Loader size="xl" />
@@ -76,7 +76,7 @@ export default function WorkspacePage({ params }) {
   
   if (isError) {
     return (
-      <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row bg-dark dark:bg-dark">
+      <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
         <div className="flex items-center justify-center w-full h-screen">
           <div className="text-center">
             <div className="text-red-500 text-xl mb-4">Error loading workspaces</div>
@@ -94,7 +94,7 @@ export default function WorkspacePage({ params }) {
   }
 
   return (
-    <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row bg-dark dark:bg-dark">
+    <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
       <Sidebar menu={menu(workspace?.slug)} routerType="app" />
       <div className="flex-1 overflow-auto">
         <Header routerType="app" />

@@ -269,7 +269,7 @@ export default function ModelsPage({ params }) {
                                 checked={enabled}
                                 onChange={() => {}} // Handled by onClick above
                                 disabled={isSaving}
-                                className="mt-1 w-4 h-4 text-pink-600 border-gray-300 rounded focus:ring-pink-500 disabled:opacity-50"
+                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500 disabled:opacity-50"
                               />
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
@@ -308,7 +308,7 @@ export default function ModelsPage({ params }) {
                   {enabledModels.filter(m => m.isEnabled).length} models enabled
                 </span>
                 {isSaving && (
-                  <span className="text-sm text-pink-600">
+                  <span className="text-sm text-green-600">
                     Saving...
                   </span>
                 )}
