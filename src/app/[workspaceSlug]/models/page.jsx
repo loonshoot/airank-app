@@ -242,10 +242,10 @@ export default function ModelsPage({ params }) {
                   return (
                     <div key={provider.id}>
                       <div className="flex items-center space-x-3 mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-lg font-semibold text-light">
                           {provider.name}
                         </h3>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-light opacity-75">
                           ({providerModels.filter(model => isModelEnabled(model.id)).length} of {providerModels.length} enabled)
                         </span>
                       </div>
@@ -259,8 +259,8 @@ export default function ModelsPage({ params }) {
                               key={model.id}
                               className={`flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
                                 enabled 
-                                  ? 'border-pink-200 bg-pink-50' 
-                                  : 'border-gray-200 hover:border-gray-300'
+                                  ? 'border-gray-400 bg-transparent' 
+                                  : 'border-gray-400 hover:border-green-500 bg-transparent'
                               }`}
                               onClick={() => !isSaving && handleModelToggle(model, !enabled)}
                             >
@@ -269,18 +269,18 @@ export default function ModelsPage({ params }) {
                                 checked={enabled}
                                 onChange={() => {}} // Handled by onClick above
                                 disabled={isSaving}
-                                className="mt-1 w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500 disabled:opacity-50"
+                                className="mt-1 w-4 h-4 accent-[#43B929] border-gray-400 bg-transparent rounded focus:ring-green-500 disabled:opacity-50"
                               />
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
-                                  <h4 className="font-medium text-gray-900">
+                                  <h4 className="font-medium text-light">
                                     {model.name}
                                   </h4>
-                                  <span className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                                  <span className="text-xs px-2 py-1 bg-transparent border border-gray-400 text-light rounded">
                                     {model.id}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-600 mt-1">
+                                <p className="text-sm text-light opacity-75 mt-1">
                                   {model.description}
                                 </p>
                               </div>
@@ -293,7 +293,7 @@ export default function ModelsPage({ params }) {
                 })}
                 
                 {enabledModels.length === 0 && !isLoading && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-light opacity-75">
                     <p>No models enabled yet. Select models above to get started.</p>
                   </div>
                 )}
@@ -304,7 +304,7 @@ export default function ModelsPage({ params }) {
           {!isLoading && (
             <Card.Footer>
               <div className="flex items-center justify-between w-full">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-light opacity-75">
                   {enabledModels.filter(m => m.isEnabled).length} models enabled
                 </span>
                 {isSaving && (

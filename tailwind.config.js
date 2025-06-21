@@ -3,6 +3,7 @@ module.exports = {
   darkMode: 'class',
   theme: {
     fontFamily: {
+      sans: ['Outfit', 'sans-serif'],
       mono: ['var(--font-mono)'],
     },
     container: {
@@ -24,34 +25,38 @@ module.exports = {
           to: { transform: 'rotate(360deg)' },
         },
       },
-    },
-    colors: {
-      'pink': {
-        600: '#FE0170',
+      colors: {
+        'pink': {
+          600: '#FE0170',
+        },
+        'green': {
+          600: '#51F72B',
+        },
+        'yellow': {
+          400: '#FFC403',
+        },
+        'blue': {
+          500: "#450EFF",
+          600: "#00FFFF"
+        },
+        'red': {
+          500: '#ff0e0e',
+          600: '#ff0e0e',
+        },
+        'purple': {
+          500: '#1c1436',
+          600: '#bc13fe'
+        },
+        'gray': {
+          300: '#D0D0D0',
+          400: '#CBD6D3',
+        },
+        'grey': {
+          200: '#7A8488',
+        },
+        'light': "#F3FAF0",
+        'dark': "#101624"
       },
-      'green': {
-        600: '#51F72B',
-      },
-      'yellow': {
-        400: '#FFC403',
-      },
-      'blue': {
-        500: "#450EFF",
-        600: "#00FFFF"
-      },
-      'red': {
-        500: '#ff0e0e',
-        600: '#ff0e0e',
-      },
-      'purple': {
-        500: '#1c1436',
-        600: '#bc13fe'
-      },
-      'grey': {
-        200: '#7A8488',
-      },
-      'light': "#F3FAF0",
-      'dark': "#101624"
     },
   },
   plugins: [],

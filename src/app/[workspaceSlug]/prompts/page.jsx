@@ -72,8 +72,10 @@ export default function PromptsPage({ params }) {
   
   // GraphQL client and state
   const graphqlClient = useGraphQLClient();
+  const [originalPrompts, setOriginalPrompts] = useState([]);
   const [prompts, setPrompts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Mark component as hydrated
   useEffect(() => {
@@ -94,7 +96,9 @@ export default function PromptsPage({ params }) {
           );
           
           if (result.data) {
-            setPrompts(result.data.prompts || []);
+            const fetchedPrompts = result.data.prompts || [];
+            setOriginalPrompts(fetchedPrompts);
+            setPrompts(fetchedPrompts);
           } else if (result.error) {
             console.error("Error fetching prompts:", result.error);
             toast.error(`Failed to load prompts: ${result.error.message}`);
@@ -111,72 +115,112 @@ export default function PromptsPage({ params }) {
     fetchPrompts();
   }, [hasHydrated, graphqlClient, workspaceSlug]);
 
-  // Handle prompt text change with auto-save
-  const handlePromptChange = async (promptId, phrase) => {
-    if (!phrase.trim()) return;
+  // Add new empty prompt field
+  const addPromptField = () => {
+    setPrompts(prev => [...prev, { _id: null, phrase: '', isNew: true }]);
+  };
 
+  // Remove prompt field
+  const removePromptField = (index) => {
+    setPrompts(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Handle prompt text change
+  const handlePromptChange = (index, phrase) => {
+    setPrompts(prev => 
+      prev.map((p, i) => 
+        i === index ? { ...p, phrase } : p
+      )
+    );
+  };
+
+  // Save all changes
+  const saveAllChanges = async () => {
+    setIsSaving(true);
+    
     try {
-      if (promptId) {
-        // Update existing prompt
-        const result = await executeMutation(
-          graphqlClient,
-          UPDATE_PROMPT,
-          { workspaceSlug, id: promptId, phrase }
-        );
+      const validPrompts = prompts.filter(p => p.phrase.trim());
+      const operations = [];
 
-        if (result.data) {
-          setPrompts(prev => 
-            prev.map(p => p._id === promptId ? result.data.updatePrompt : p)
+      // Handle new prompts (create)
+      const newPrompts = validPrompts.filter(p => !p._id);
+      for (const prompt of newPrompts) {
+        operations.push(
+          executeMutation(graphqlClient, CREATE_PROMPT, {
+            workspaceSlug,
+            phrase: prompt.phrase.trim()
+          })
+        );
+      }
+
+      // Handle existing prompts (update)
+      const existingPrompts = validPrompts.filter(p => p._id);
+      for (const prompt of existingPrompts) {
+        const original = originalPrompts.find(op => op._id === prompt._id);
+        if (original && original.phrase !== prompt.phrase.trim()) {
+          operations.push(
+            executeMutation(graphqlClient, UPDATE_PROMPT, {
+              workspaceSlug,
+              id: prompt._id,
+              phrase: prompt.phrase.trim()
+            })
           );
-          toast.success('Prompt updated successfully');
-        } else if (result.error) {
-          toast.error(`Failed to update prompt: ${result.error.message}`);
+        }
+      }
+
+      // Handle deleted prompts
+      const currentIds = validPrompts.filter(p => p._id).map(p => p._id);
+      const deletedPrompts = originalPrompts.filter(op => !currentIds.includes(op._id));
+      for (const prompt of deletedPrompts) {
+        operations.push(
+          executeMutation(graphqlClient, DELETE_PROMPT, {
+            workspaceSlug,
+            id: prompt._id
+          })
+        );
+      }
+
+      // Execute all operations
+      if (operations.length > 0) {
+        await Promise.all(operations);
+        
+        // Refetch to get updated data
+        const result = await executeQuery(graphqlClient, GET_PROMPTS, { workspaceSlug });
+        if (result.data) {
+          const updatedPrompts = result.data.prompts || [];
+          setOriginalPrompts(updatedPrompts);
+          setPrompts(updatedPrompts);
+          toast.success('Prompts saved successfully');
         }
       } else {
-        // Create new prompt
-        const result = await executeMutation(
-          graphqlClient,
-          CREATE_PROMPT,
-          { workspaceSlug, phrase }
-        );
-
-        if (result.data) {
-          setPrompts(prev => [...prev, result.data.createPrompt]);
-          toast.success('Prompt created successfully');
-        } else if (result.error) {
-          toast.error(`Failed to create prompt: ${result.error.message}`);
-        }
+        toast.success('No changes to save');
       }
     } catch (error) {
-      console.error("Error saving prompt:", error);
-      toast.error(`Error saving prompt: ${error.message}`);
+      console.error("Error saving prompts:", error);
+      toast.error(`Error saving prompts: ${error.message}`);
     }
+    
+    setIsSaving(false);
   };
 
-  // Handle prompt deletion
-  const handleDeletePrompt = async (promptId) => {
-    try {
-      const result = await executeMutation(
-        graphqlClient,
-        DELETE_PROMPT,
-        { workspaceSlug, id: promptId }
-      );
-
-      if (result.data) {
-        setPrompts(result.data.deletePrompt.remainingPrompts);
-        toast.success('Prompt deleted successfully');
-      } else if (result.error) {
-        toast.error(`Failed to delete prompt: ${result.error.message}`);
-      }
-    } catch (error) {
-      console.error("Error deleting prompt:", error);
-      toast.error(`Error deleting prompt: ${error.message}`);
-    }
-  };
-
-  // Add new empty prompt field
-  const addNewPromptField = () => {
-    setPrompts(prev => [...prev, { _id: null, phrase: '', isNew: true }]);
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    const validPrompts = prompts.filter(p => p.phrase.trim());
+    
+    // Check for new prompts
+    if (validPrompts.some(p => !p._id)) return true;
+    
+    // Check for modified prompts
+    if (validPrompts.some(p => {
+      const original = originalPrompts.find(op => op._id === p._id);
+      return original && original.phrase !== p.phrase.trim();
+    })) return true;
+    
+    // Check for deleted prompts
+    const currentIds = validPrompts.filter(p => p._id).map(p => p._id);
+    if (originalPrompts.some(op => !currentIds.includes(op._id))) return true;
+    
+    return false;
   };
 
   return (
@@ -203,59 +247,79 @@ export default function PromptsPage({ params }) {
                     <input
                       type="text"
                       value={prompt.phrase}
-                      onChange={(e) => {
-                        const newPhrase = e.target.value;
-                        setPrompts(prev => 
-                          prev.map((p, i) => 
-                            i === index ? { ...p, phrase: newPhrase } : p
-                          )
-                        );
-                      }}
-                      onBlur={(e) => {
-                        const phrase = e.target.value.trim();
-                        if (phrase) {
-                          handlePromptChange(prompt._id, phrase);
-                        }
-                      }}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          const phrase = e.target.value.trim();
-                          if (phrase) {
-                            handlePromptChange(prompt._id, phrase);
-                          }
-                        }
-                      }}
+                      onChange={(e) => handlePromptChange(index, e.target.value)}
                       placeholder="Enter a prompt phrase..."
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                      className="flex-1 px-3 py-2 bg-transparent border border-gray-400 text-light rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     />
-                    {prompt._id && (
+                    {/* Remove button - hidden for first field */}
+                    {index > 0 && (
                       <button
-                        onClick={() => handleDeletePrompt(prompt._id)}
+                        onClick={() => removePromptField(index)}
                         className="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+                        title="Remove field"
                       >
                         ×
+                      </button>
+                    )}
+                    {/* Add button - only show on last field or if it's the only field */}
+                    {(index === prompts.length - 1 || prompts.length === 1) && (
+                      <button
+                        onClick={addPromptField}
+                        className="px-3 py-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+                        title="Add field"
+                        disabled={isLoading || isSaving}
+                      >
+                        +
                       </button>
                     )}
                   </div>
                 ))}
                 
                 {prompts.length === 0 && !isLoading && (
-                  <p className="text-gray-500 text-center py-8">
-                    No prompts configured yet. Click the + button to add your first prompt.
-                  </p>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value=""
+                      onChange={(e) => {
+                        if (e.target.value) {
+                          addPromptField();
+                          setTimeout(() => {
+                            handlePromptChange(0, e.target.value);
+                          }, 0);
+                        }
+                      }}
+                      placeholder="Enter a prompt phrase..."
+                      className="flex-1 px-3 py-2 bg-transparent border border-gray-400 text-light rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <button
+                      onClick={addPromptField}
+                      className="px-3 py-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+                      title="Add field"
+                      disabled={isLoading || isSaving}
+                    >
+                      +
+                    </button>
+                  </div>
                 )}
               </div>
             )}
           </Card.Body>
           <Card.Footer>
-            <Button
-              background="Pink"
-              border="Light"
-              disabled={isLoading}
-              onClick={addNewPromptField}
-            >
-              + Add Prompt
-            </Button>
+            <div className="flex justify-end items-center w-full">
+              <button
+                onClick={saveAllChanges}
+                disabled={isLoading || isSaving || !hasUnsavedChanges()}
+                className={`
+                  px-6 py-2 rounded-md font-semibold text-dark transition-colors
+                  ${isLoading || isSaving || !hasUnsavedChanges() 
+                    ? 'bg-gray-300 cursor-not-allowed' 
+                    : 'bg-[#51F72B] hover:bg-[#37B91A]'
+                  }
+                `}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
           </Card.Footer>
         </Card>
       </Content.Container>
