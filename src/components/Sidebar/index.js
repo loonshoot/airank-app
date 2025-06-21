@@ -56,7 +56,7 @@ const Sidebar = ({ menu, routerType }) => {
       <div className="flex items-center justify-center p-4 bg-dark border-b border-b-dark md:hidden">
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
-            src="https://res.cloudinary.com/dpzlbvtpx/image/upload/v1700214339/airank_logo_g3qtsp.svg"
+            src="/images/logo-light.svg"
             width={100}
             height={100}
             alt="AI Rank logo"
@@ -86,7 +86,7 @@ const Sidebar = ({ menu, routerType }) => {
           <div className="relative hidden md:flex items-center justify-center p-5 bg-dark border-b border-b-dark">
             <Link href="/" className="flex-grow text-2xl font-bold">
               <Image
-                src="https://res.cloudinary.com/dpzlbvtpx/image/upload/v1700214339/airank_logo_g3qtsp.svg"
+                src="/images/logo-light.svg"
                 width={100}
                 height={100}
                 alt="AI Rank logo"

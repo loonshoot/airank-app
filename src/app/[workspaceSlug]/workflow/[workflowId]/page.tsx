@@ -146,7 +146,7 @@ const WorkflowNavigation = ({
       <div className="relative flex items-center justify-center p-3 bg-dark border-b border-b-dark">
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
-            src="https://res.cloudinary.com/dpzlbvtpx/image/upload/v1700214339/airank_logo_g3qtsp.svg"
+            src="/images/logo-light.svg"
             width={100}
             height={100}
             alt="AI Rank logo"
