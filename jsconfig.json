@@ -5,6 +5,7 @@
       "@/prisma/*": ["prisma/*"],
       "@/components/*": ["src/components/*"],
       "@/config/*": ["src/config/*"],
+      "@/data/*": ["src/data/*"],
       "@/hooks/*": ["src/hooks/*"],
       "@/layouts/*": ["src/layouts/*"],
       "@/lib/*": ["src/lib/*"],

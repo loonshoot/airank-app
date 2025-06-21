@@ -3,24 +3,20 @@ const menu = (workspaceId) => [
     name: 'Workspace',
     menuItems: [
       {
-        name: 'common.label.home',
+        name: 'common.label.dashboard',
         path: `/${workspaceId}`,
       },
       {
-        name: 'common.label.data',
-        path: `/${workspaceId}/data`,
+        name: 'common.label.prompts',
+        path: `/${workspaceId}/prompts`,
       },
       {
-        name: 'common.label.sources',
-        path: `/${workspaceId}/sources`,
+        name: 'common.label.brands',
+        path: `/${workspaceId}/brands`,
       },
       {
-        name: 'common.label.destinations',
-        path: `/${workspaceId}/destinations`,
-      },
-      {
-        name: 'common.label.logs',
-        path: `/${workspaceId}/logs`,
+        name: 'common.label.models',
+        path: `/${workspaceId}/models`,
       },
     ],
   },
