@@ -29,7 +29,7 @@ if (process.env.NODE_ENV === 'development') {
 
 export async function connectToDatabase() {
   const client = await clientPromise;
-  const db = client.db('outrun');
+  const db = client.db('airank');
   return { client, db };
 }
 

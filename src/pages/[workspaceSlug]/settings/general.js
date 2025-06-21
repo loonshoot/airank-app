@@ -41,7 +41,7 @@ const General = ({ isTeamOwner, workspace, sources, token }) => {
 
   return (
     <AccountLayout>
-      <Meta title={`Outrun - ${workspace.name} | Settings`} />
+      <Meta title={`AI Rank - ${workspace.name} | Settings`} />
       <Content.Title
         title={t("settings.workspace.settings")}
         subtitle={t("settings.general.workspace.description")}

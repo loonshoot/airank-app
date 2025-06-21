@@ -20,7 +20,7 @@ graph TB
     
     DB -->|Store| Runs[(Workflow Runs)]
     
-    subgraph "outrun-core Services"
+    subgraph "airank-core Services"
         Listener
         Queue
         Runner
@@ -96,21 +96,21 @@ graph TB
 
 ## 🔄 **Service Responsibilities**
 
-### **1. Frontend (outrun-app)**
+### **1. Frontend (airank-app)**
 - ✅ **Visual Workflow Editor** - Drag/drop nodes, edit properties
 - ✅ **Database Sync** - Save workflows to MongoDB
 - ✅ **Trigger Management** - Configure webhooks, schedules, conditions  
 - ✅ **Run History** - View execution logs and analytics
 - ❌ **NO Direct Execution** - Only reads/writes database
 
-### **2. Listener Service (outrun-core/listener)**
+### **2. Listener Service (airank-core/listener)**
 - ✅ **Webhook Endpoints** - Generate unique URLs per trigger
 - ✅ **Cron Scheduling** - Time-based workflow triggers
 - ✅ **Data Change Monitoring** - MongoDB change streams
 - ✅ **Queue Management** - Enqueue workflows for execution
 - ✅ **Trigger Statistics** - Track trigger usage
 
-### **3. Workflow Runner (outrun-core/workflows)**
+### **3. Workflow Runner (airank-core/workflows)**
 - ✅ **AI Agent Execution** - OpenAI Agents SDK integration
 - ✅ **Non-AI Operations** - Webhooks, parsers, transformers
 - ✅ **Step Tracking** - Detailed execution logs
@@ -185,13 +185,13 @@ graph TB
 ## 🔧 **Environment Variables**
 
 ```bash
-# outrun-core/.env
-MONGO_URI=mongodb://localhost:27017/outrun
+# airank-core/.env
+MONGO_URI=mongodb://localhost:27017/airank
 WORKFLOW_SERVICE_URL=http://localhost:3005
 LISTENER_SERVICE_URL=http://localhost:3006
 OPENAI_API_KEY=your_openai_key
 
-# outrun-app/.env.local
+# airank-app/.env.local
 WORKFLOW_API_URL=http://localhost:3001  # Through API gateway
 ```
 
@@ -199,16 +199,16 @@ WORKFLOW_API_URL=http://localhost:3001  # Through API gateway
 
 ```bash
 # Start all services
-cd outrun-core
+cd airank-core
 docker-compose up -d
 
 # Development mode
-cd outrun-core/scripts
+cd airank-core/scripts
 ./start-dev.sh
 
 # Individual services
-cd outrun-core/workflows && npm run dev
-cd outrun-core/listener && npm run dev
+cd airank-core/workflows && npm run dev
+cd airank-core/listener && npm run dev
 ```
 
 ## 📝 **Migration Strategy**

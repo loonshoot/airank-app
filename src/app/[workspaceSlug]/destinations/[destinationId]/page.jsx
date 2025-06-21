@@ -358,7 +358,7 @@ export default function DestinationDetailPage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${destination?.name || t("destination.title")}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${destination?.name || t("destination.title")}`} />
       <Content.Title
         title={t("destination.title")}
         subtitle={destination ? `${destination.name} - ${destination._id}` : "Loading..."}

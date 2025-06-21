@@ -33,32 +33,32 @@ const UPDATE_WORKSPACE_CONFIGS = gql`
   }
 `;
 
-// Define outrunFields first
-const outrunFields = [
-  { name: 'outrun_id', label: 'Outrun ID', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_emailAddress', label: 'Outrun Email Address', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_phoneNumber', label: 'Outrun Phone Number', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_companyName', label: 'Outrun Company Name', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_firstName', label: 'Outrun First Name', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_lastName', label: 'Outrun Last Name', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_address', label: 'Outrun Address', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_phoneMobile', label: 'Outrun Phone (Mobile)', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_phoneWork', label: 'Outrun Phone (Work)', valueSources: ['Outrun field'], comparator: 'group1' },
-  { name: 'outrun_country', label: 'Outrun Country', valueSources: ['Outrun field'], comparator: 'group1' }
+// Define airankFields first
+const airankFields = [
+  { name: 'airank_id', label: 'AI Rank ID', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_emailAddress', label: 'AI Rank Email Address', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_phoneNumber', label: 'AI Rank Phone Number', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_companyName', label: 'AI Rank Company Name', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_firstName', label: 'AI Rank First Name', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_lastName', label: 'AI Rank Last Name', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_address', label: 'AI Rank Address', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_phoneMobile', label: 'AI Rank Phone (Mobile)', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_phoneWork', label: 'AI Rank Phone (Work)', valueSources: ['AI Rank field'], comparator: 'group1' },
+  { name: 'airank_country', label: 'AI Rank Country', valueSources: ['AI Rank field'], comparator: 'group1' }
 ];
 
-// Now define fields using outrunFields
+// Now define fields using airankFields
 const allFields = [
-  { name: 'id', label: 'Source ID', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'emailAddress', label: 'Source Email Address', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'phoneNumber', label: 'Source Phone Number', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'companyName', label: 'Source Company Name', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'firstName', label: 'Source First Name', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'lastName', label: 'Source Last Name', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'address', label: 'Source Address', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'phoneMobile', label: 'Source Mobile Phone', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'phoneWork', label: 'Source Phone (Work)', valueSources: ['value'], comparator: 'group1', values: outrunFields },
-  { name: 'country', label: 'Source Country', valueSources: ['value'], comparator: 'group1', values: outrunFields }
+  { name: 'id', label: 'Source ID', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'emailAddress', label: 'Source Email Address', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'phoneNumber', label: 'Source Phone Number', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'companyName', label: 'Source Company Name', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'firstName', label: 'Source First Name', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'lastName', label: 'Source Last Name', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'address', label: 'Source Address', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'phoneMobile', label: 'Source Mobile Phone', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'phoneWork', label: 'Source Phone (Work)', valueSources: ['value'], comparator: 'group1', values: airankFields },
+  { name: 'country', label: 'Source Country', valueSources: ['value'], comparator: 'group1', values: airankFields }
 ];
 
 // Custom value editor component
@@ -71,16 +71,16 @@ const ValueEditor = ({ value, field, operator, valueSource, handleOnChange, t })
         className="w-full rule-value"
       >
         <option value="">{t("data.fields.selectField")}</option>
-        {field.values?.map(outrunField => (
-          <option key={outrunField.name} value={outrunField.name}>
-            {outrunField.label}
+        {field.values?.map(airankField => (
+          <option key={airankField.name} value={airankField.name}>
+            {airankField.label}
           </option>
         ))}
       </select>
     );
   }
 
-  // For 'value' source, show only paired Outrun field
+  // For 'value' source, show only paired AI Rank field
   const pairedField = field.values?.[0];
   return (
     <select
@@ -315,17 +315,17 @@ const DataTab = ({ sources = [], workspace, token }) => {
       {
         field: 'emailAddress',
         operator: 'equal',
-        value: 'outrun_emailAddress'
+        value: 'airank_emailAddress'
       },
       {
         field: 'id',
         operator: 'equal',
-        value: 'outrun_id'
+        value: 'airank_id'
       },
       {
         field: 'phoneMobile',
         operator: 'equal',
-        value: 'outrun_phoneMobile'
+        value: 'airank_phoneMobile'
       }
     ]
   };
@@ -535,7 +535,7 @@ const DataTab = ({ sources = [], workspace, token }) => {
       {
         field: 'id',
         operator: 'equal',
-        value: 'outrun_id'
+        value: 'airank_id'
       },
       {
         id: '40035a38-4269-45ae-bade-7922fd3b0e1e',
@@ -545,14 +545,14 @@ const DataTab = ({ sources = [], workspace, token }) => {
             field: 'companyName',
             operator: 'equal',
             valueSource: 'value',
-            value: 'outrun_companyName'
+            value: 'airank_companyName'
           },
           {
             id: '1ba75bb0-68d8-45f2-a442-121b135f2024',
             field: 'country',
             operator: 'equal',
             valueSource: 'value',
-            value: 'outrun_country'
+            value: 'airank_country'
           }
         ],
         combinator: 'and',

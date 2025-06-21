@@ -146,10 +146,10 @@ const WorkflowNavigation = ({
       <div className="relative flex items-center justify-center p-3 bg-dark border-b border-b-dark">
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
-            src="https://res.cloudinary.com/dpzlbvtpx/image/upload/v1700214339/outrun_logo_g3qtsp.svg"
+            src="https://res.cloudinary.com/dpzlbvtpx/image/upload/v1700214339/airank_logo_g3qtsp.svg"
             width={100}
             height={100}
-            alt="Outrun logo"
+            alt="AI Rank logo"
             priority
           />
         </Link>
@@ -899,7 +899,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
 
   return (
     <>
-      <Meta title={`${workflow.name} - ${(workspace as any)?.name || 'Outrun'}`} />
+      <Meta title={`${workflow.name} - ${(workspace as any)?.name || 'AI Rank'}`} />
       
       <div className="flex h-screen bg-dark dark:bg-dark text-light dark:text-light">
         {/* Custom Navigation */}

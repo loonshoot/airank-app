@@ -483,7 +483,7 @@ export default function ZohoCRMSourcePage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.add.title.zohocrm") || "Add Zoho CRM Source"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.add.title.zohocrm") || "Add Zoho CRM Source"}`} />
       <Content.Title
         title={t("sources.add.title") || "Add Source"}
         subtitle={t("sources.add.subtitle.zohocrm") || "Connect to Zoho CRM"}

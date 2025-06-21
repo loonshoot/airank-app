@@ -82,20 +82,20 @@ function processFile(filePath) {
 async function main() {
   console.log("Starting update of Member.findOne calls...");
   
-  // Find all JS files in the GraphQL directories - check both src/graphql and outrun-core
+  // Find all JS files in the GraphQL directories - check both src/graphql and airank-core
   const srcFiles = glob.sync(path.join(process.cwd(), 'src/graphql/**/*.js'));
-  let outrunCoreFiles = [];
+  let airankCoreFiles = [];
   
-  // Check if outrun-core directory exists
-  const outrunCorePath = path.join(process.cwd(), '../outrun-core');
-  if (fs.existsSync(outrunCorePath)) {
-    outrunCoreFiles = glob.sync(path.join(outrunCorePath, 'graphql/**/*.js'));
-    console.log(`Found ${outrunCoreFiles.length} files in outrun-core`);
+  // Check if airank-core directory exists
+  const airankCorePath = path.join(process.cwd(), '../airank-core');
+  if (fs.existsSync(airankCorePath)) {
+    airankCoreFiles = glob.sync(path.join(airankCorePath, 'graphql/**/*.js'));
+    console.log(`Found ${airankCoreFiles.length} files in airank-core`);
   } else {
-    console.log(`outrun-core directory not found at ${outrunCorePath}`);
+    console.log(`airank-core directory not found at ${airankCorePath}`);
   }
   
-  const files = [...srcFiles, ...outrunCoreFiles];
+  const files = [...srcFiles, ...airankCoreFiles];
   console.log(`Found a total of ${files.length} GraphQL files to check`);
   
   // Process each file

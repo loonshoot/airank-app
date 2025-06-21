@@ -2,9 +2,9 @@
     {
         "name": "Google Search Console",
         "sourceJobs": ["googleSearchConsoleSource"],
-        "author": "Outrun",
-        "logo": "https://cdn.getoutrun.com/integrations/google-search-console/logo.png",
-        "icon": "https://cdn.getoutrun.com/integrations/google-search-console/icon.png",
+        "author": "AI Rank",
+        "logo": "https://cdn.getairank.com/integrations/google-search-console/logo.png",
+        "icon": "https://cdn.getairank.com/integrations/google-search-console/icon.png",
         "path": "/{{workspaceSlug}}/sources/add/google-search-console",
         "priority": 1,
         "willOverride": true
@@ -12,9 +12,9 @@
     {
         "name": "Hubspot",
         "sourceJobs": ["hubspotSource"],
-        "author": "Outrun",
-        "logo": "https://cdn.getoutrun.com/integrations/hubspot/logo.webp",
-        "icon": "https://cdn.getoutrun.com/integrations/hubspot/icon.png",
+        "author": "AI Rank",
+        "logo": "https://cdn.getairank.com/integrations/hubspot/logo.webp",
+        "icon": "https://cdn.getairank.com/integrations/hubspot/icon.png",
         "path": "/{{workspaceSlug}}/sources/add/hubspot",
         "priority": 2,
         "willOverride": false
@@ -22,9 +22,9 @@
     {
         "name": "Confluence",
         "sourceJobs": ["confluenceSource"],
-        "author": "Outrun",
-        "logo": "https://cdn.getoutrun.com/integrations/atlassian-confluence/logo.png",
-        "icon": "https://cdn.getoutrun.com/integrations/atlassian-confluence/icon.png",
+        "author": "AI Rank",
+        "logo": "https://cdn.getairank.com/integrations/atlassian-confluence/logo.png",
+        "icon": "https://cdn.getairank.com/integrations/atlassian-confluence/icon.png",
         "path": "/{{workspaceSlug}}/sources/add/confluence",
         "priority": 3,
         "willOverride": false
@@ -32,9 +32,9 @@
     {
         "name": "Salesforce",
         "sourceJobs": ["salesforceSource"],
-        "author": "Outrun",
-        "logo": "https://cdn.getoutrun.com/integrations/salesforce/logo.webp",
-        "icon": "https://cdn.getoutrun.com/integrations/salesforce/icon.png",
+        "author": "AI Rank",
+        "logo": "https://cdn.getairank.com/integrations/salesforce/logo.webp",
+        "icon": "https://cdn.getairank.com/integrations/salesforce/icon.png",
         "path": "/{{workspaceSlug}}/sources/add/salesforce",
         "priority": 1,
         "description": "Send data to Salesforce CRM"
@@ -42,9 +42,9 @@
     {
         "name": "Zoho CRM",
         "sourceJobs": ["zohocrmSource"],
-        "author": "Outrun",
-        "logo": "https://cdn.getoutrun.com/integrations/zoho/logo.png",
-        "icon": "https://cdn.getoutrun.com/integrations/zoho/logo.png",
+        "author": "AI Rank",
+        "logo": "https://cdn.getairank.com/integrations/zoho/logo.png",
+        "icon": "https://cdn.getairank.com/integrations/zoho/logo.png",
         "path": "/{{workspaceSlug}}/sources/add/zohocrm",
         "priority": 3,
         "description": "Pull data from Zoho CRM"

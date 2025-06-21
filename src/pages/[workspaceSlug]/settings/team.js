@@ -111,7 +111,7 @@ const Team = ({ isTeamOwner, workspace }) => {
 
   return (
     <AccountLayout>
-      <Meta title={`Outrun - ${workspace.name} | Team Management`} />
+      <Meta title={`AI Rank - ${workspace.name} | Team Management`} />
       <Content.Title
         title={t("settings.team.management")}
         subtitle={t("settings.team.manage.members")}

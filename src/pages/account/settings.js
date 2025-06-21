@@ -106,7 +106,7 @@ const Settings = ({ user }) => {
 
   return (
     <AccountLayout>
-      <Meta title="Outrun - Account Settings" />
+      <Meta title="AI Rank - Account Settings" />
       <Content.Title
         title={t("settings.header.title")}
         subtitle={t("settings.header.description")}

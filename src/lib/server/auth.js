@@ -80,7 +80,7 @@ export const authOptions = {
         if (isProduction) {
           await sendMail({
             html: html({ email, url }),
-            subject: `[Outrun] Sign in to ${host}`,
+            subject: `[AI Rank] Sign in to ${host}`,
             text: text({ email, url }),
             to: email,
           });

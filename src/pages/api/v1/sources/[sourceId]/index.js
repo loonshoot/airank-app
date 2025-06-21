@@ -16,7 +16,7 @@ const handler = async (req, res) => {
   try {
     await client.connect();
 
-    const db = client.db('outrun');
+    const db = client.db('airank');
     const sourcesCollection = db.collection('sources');
     const source = await sourcesCollection.findOne({ _id: sourceId });
 
@@ -124,7 +124,7 @@ const handler = async (req, res) => {
       requestingIp,
       invocationTime: new Date().getTime() - start // Total milliseconds
     };
-    const loggingCollection = client.db('outrun').collection('logging');
+    const loggingCollection = client.db('airank').collection('logging');
     await loggingCollection.insertOne(loggingObject);
     res.status(500).json({ errors: { error: { msg: 'Internal server error' } } });
   } finally {

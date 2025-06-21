@@ -498,7 +498,7 @@ export default function GoogleSearchConsolePage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.add.gsc.title") || "Add Google Search Console Source"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.add.gsc.title") || "Add Google Search Console Source"}`} />
       <Content.Title
         title={t("sources.add.gsc.title") || "Add Google Search Console Source"}
         subtitle={t("sources.add.gsc.subtitle") || "Track your website's search performance and visibility"}

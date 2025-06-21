@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     });
 
     // Extract workspace slug from state
-    const workspaceSlug = state?.replace('/', '').split('/')[0] || 'outrun-dev';
+    const workspaceSlug = state?.replace('/', '').split('/')[0] || 'airank-dev';
     const redirectPath = state || `/${workspaceSlug}/destinations/add/zohocrm`;
 
     // Handle errors from Zoho
@@ -70,7 +70,7 @@ export default async function handler(req, res) {
     return res.redirect('/');
   } catch (error) {
     console.error('Error handling Zoho OAuth callback:', error);
-    const defaultRedirectUrl = `/${req.query.workspaceSlug || 'outrun-dev'}/destinations/add/zohocrm`;
+    const defaultRedirectUrl = `/${req.query.workspaceSlug || 'airank-dev'}/destinations/add/zohocrm`;
     return res.redirect(`${defaultRedirectUrl}?error=${encodeURIComponent('Failed to process Zoho authorization')}`);
   }
 } 

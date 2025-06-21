@@ -91,7 +91,7 @@ export default function SourcesPage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.title") || "Sources"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.title") || "Sources"}`} />
       <Content.Title
         title={t("sources.title") || "Sources"}
         subtitle={t("sources.subtitle") || "Manage your data sources"}

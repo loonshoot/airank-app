@@ -65,7 +65,7 @@ export default function AddSourcePage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.add.title")}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.add.title")}`} />
       <Content.Title
         title={t("sources.add.title")}
         subtitle={t("sources.add.subtitle")}

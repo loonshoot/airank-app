@@ -10,8 +10,8 @@ const fira = Fira_Code({
 });
 
 export const metadata = {
-  title: 'Outrun',
-  description: 'Outrun App',
+  title: 'AI Rank',
+  description: 'AI Rank App',
 };
 
 export default async function RootLayout({ children }) {

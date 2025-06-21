@@ -27,8 +27,8 @@ export default async function handler(req, res) {
     });
 
     // Parse state parameter to extract returnTo URL
-    let redirectPath = '/outrun-dev/sources/add/zohocrm'; // default fallback
-    let workspaceSlug = 'outrun-dev';
+    let redirectPath = '/airank-dev/sources/add/zohocrm'; // default fallback
+    let workspaceSlug = 'airank-dev';
     
     if (state) {
       try {
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
     return res.redirect('/');
   } catch (error) {
     console.error('Error handling Zoho OAuth callback:', error);
-    const defaultRedirectUrl = `/${req.query.workspaceSlug || 'outrun-dev'}/sources/add/zohocrm`;
+    const defaultRedirectUrl = `/${req.query.workspaceSlug || 'airank-dev'}/sources/add/zohocrm`;
     return res.redirect(`${defaultRedirectUrl}?error=${encodeURIComponent('Failed to process Zoho authorization')}`);
   }
 } 

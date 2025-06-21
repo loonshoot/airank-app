@@ -449,7 +449,7 @@ export default function SalesforceSourcePage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.add.title.salesforce") || "Add Salesforce Source"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.add.title.salesforce") || "Add Salesforce Source"}`} />
       <Content.Title
         title={t("sources.add.title") || "Add Source"}
         subtitle={t("sources.add.subtitle.salesforce") || "Connect to Salesforce"}

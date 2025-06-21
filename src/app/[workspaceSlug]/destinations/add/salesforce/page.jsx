@@ -457,7 +457,7 @@ export default function SalesforceDestinationPage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.salesforce.title") || "Add Salesforce Destination"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.salesforce.title") || "Add Salesforce Destination"}`} />
       <Content.Title
         title={t("destinations.add.salesforce.title") || "Add Salesforce Destination"}
         subtitle={t("destinations.add.salesforce.subtitle") || "Connect your data to Salesforce"}

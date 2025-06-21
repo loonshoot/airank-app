@@ -16,6 +16,17 @@ import { useTranslation } from "react-i18next";
 import { executeQuery, executeMutation } from '@/graphql/operations';
 import { GET_WORKFLOWS, CREATE_WORKFLOW } from '@/graphql/workflow-operations';
 
+interface Workspace {
+  id: string;
+  name: string;
+  slug: string;
+  workspaceCode: string;
+  inviteCode: string;
+  creatorId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface WorkflowDefinition {
   id: string
   name: string
@@ -40,7 +51,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
   const resolvedParams = use(params);
   const { workspaceSlug } = resolvedParams || {};
   const { t } = useTranslation();
-  const { workspace } = useWorkspace();
+  const { workspace } = useWorkspace() as { workspace: Workspace | null };
   const [hasHydrated, setHasHydrated] = useState(false);
   
   // GraphQL client and state
@@ -178,7 +189,7 @@ export default function WorkflowPage({ params }: WorkflowPageProps) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("workflow.title") || "Workflows"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("workflow.title") || "Workflows"}`} />
       <Content.Title
         title={t("workflow.title") || "Workflows"}
         subtitle={t("workflow.subtitle") || "Manage your workflows"}

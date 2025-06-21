@@ -41,7 +41,7 @@ const ObjectDetail = ({ workspace, data }) => {
 
   return (
     <AccountLayout>
-      <Meta title={`Outrun - ${workspace.name} | ${t("workspace.dashboard.header.meta")}`} />
+      <Meta title={`AI Rank - ${workspace.name} | ${t("workspace.dashboard.header.meta")}`} />
       <Link href={`/${workspace.slug}/data/${collectionSlug}/`}>
         <p className="mb-4 inline-block text-blue-600 hover:text-blue-800">
           &lt; {t("data.collection.header.back")}

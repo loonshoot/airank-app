@@ -538,7 +538,7 @@ export default function HubSpotDestinationPage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.hubspot.title") || "Add HubSpot Destination"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.hubspot.title") || "Add HubSpot Destination"}`} />
       <Content.Title
         title={t("destinations.add.hubspot.title") || "Add HubSpot Destination"}
         subtitle={t("destinations.add.hubspot.subtitle") || "Connect your data to HubSpot"}

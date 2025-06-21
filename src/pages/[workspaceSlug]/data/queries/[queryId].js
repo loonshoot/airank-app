@@ -231,7 +231,7 @@ const QueryEditor = ({ workspace, token, queryId }) => {
 
   return (
     <AccountLayout>
-      <Meta title={`Outrun - ${workspace.name} | Edit Query`} />
+      <Meta title={`AI Rank - ${workspace.name} | Edit Query`} />
       <Content.Title
         title={t("data.queries.edit.title")}
         subtitle={t("data.queries.edit.subtitle")}

@@ -520,7 +520,7 @@ export default function ConfluencePage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.add.confluence.title") || "Add Confluence Source"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.add.confluence.title") || "Add Confluence Source"}`} />
       <Content.Title
         title={t("sources.add.confluence.title") || "Add Confluence Source"}
         subtitle={t("sources.add.confluence.subtitle") || "Import your knowledge base content and documentation"}

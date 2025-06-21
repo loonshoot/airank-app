@@ -58,7 +58,7 @@ const PersonDetail = ({ workspace, data }) => {
       <div className="mb-8 pl-4">
         <div className="relative w-48 h-48">
           <Image
-            src="https://cdn.getoutrun.com/app/portraits/placeholder-portrait.jpg"
+            src="https://cdn.getairank.com/app/portraits/placeholder-portrait.jpg"
             alt={`${personData.firstName} ${personData.lastName}`}
             layout="fill"
             objectFit="cover"

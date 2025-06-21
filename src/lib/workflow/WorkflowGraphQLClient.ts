@@ -26,7 +26,7 @@ export type {
   WorkflowStep
 } from './WorkflowAPI';
 
-// Use separate outrun-core GraphQL endpoint
+// Use separate airank-core GraphQL endpoint
 const OUTRUN_CORE_GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_OUTRUN_CORE_GRAPHQL_ENDPOINT || 'http://localhost:3002/graphql';
 
 export class WorkflowGraphQLClient {

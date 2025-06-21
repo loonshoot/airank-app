@@ -481,7 +481,7 @@ export default function HubSpotSourcePage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("sources.add.hubspot.title") || "Add HubSpot Source"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("sources.add.hubspot.title") || "Add HubSpot Source"}`} />
       <Content.Title
         title={t("sources.add.hubspot.title") || "Add HubSpot Source"}
         subtitle={t("sources.add.hubspot.subtitle") || "Connect your HubSpot CRM data"}

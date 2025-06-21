@@ -28,7 +28,7 @@ export const updateEmail = async (id, email, previousEmail) => {
   });
   await sendMail({
     html: html({ email }),
-    subject: `[Outrun] Email address updated`,
+    subject: `[AI Rank] Email address updated`,
     text: text({ email }),
     to: [email, previousEmail],
   });

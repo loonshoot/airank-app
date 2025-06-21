@@ -65,7 +65,7 @@ export default function AddDestinationPage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.title")}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.title")}`} />
       <Content.Title
         title={t("destinations.add.title")}
         subtitle={t("destinations.add.subtitle")}

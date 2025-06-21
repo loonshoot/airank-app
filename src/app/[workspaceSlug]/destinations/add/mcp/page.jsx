@@ -159,7 +159,7 @@ export default function McpDestinationPage({ params }) {
     
     const config = {
       "mcpServers": {
-        [`outrun-${workspaceSlug}`]: {
+        [`airank-${workspaceSlug}`]: {
           "command": "npx",
           "args": [
             "@modelcontextprotocol/server-fetch",
@@ -188,7 +188,7 @@ export default function McpDestinationPage({ params }) {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.mcp.title") || "Add MCP Server"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.mcp.title") || "Add MCP Server"}`} />
       <Content.Title
         title={t("destinations.add.mcp.title") || "Add MCP Server"}
         subtitle={t("destinations.add.mcp.subtitle") || "Create Model Context Protocol server for AI access"}

@@ -439,7 +439,7 @@ export default function ZohoCRMDestinationPage({ params }) {
     
     return (
     <AccountLayout routerType="app">
-      <Meta title={`Outrun - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.zohocrm.title") || "Add Zoho CRM Destination"}`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Dashboard'} | ${t("destinations.add.zohocrm.title") || "Add Zoho CRM Destination"}`} />
       <Content.Title
         title={t("destinations.add.zohocrm.title") || "Add Zoho CRM Destination"}
         subtitle={t("destinations.add.zohocrm.subtitle") || "Connect your data to Zoho CRM"}

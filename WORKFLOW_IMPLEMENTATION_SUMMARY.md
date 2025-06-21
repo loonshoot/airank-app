@@ -1,13 +1,13 @@
 # Event-Driven Workflow Architecture Implementation Summary
 
 ## 🎯 Overview
-This implementation transforms the workflow system from a REST-based architecture to a comprehensive event-driven system using GraphQL, with real-time subscriptions and autonomous service components. The backend services are in `outrun-core` while the frontend components remain in `outrun-app`.
+This implementation transforms the workflow system from a REST-based architecture to a comprehensive event-driven system using GraphQL, with real-time subscriptions and autonomous service components. The backend services are in `airank-core` while the frontend components remain in `airank-app`.
 
 ## 📁 Repository Structure
 
-### outrun-core (Backend Services)
+### airank-core (Backend Services)
 ```
-outrun-core/
+airank-core/
 ├── src/
 │   ├── graphql/
 │   │   ├── workflow-schema.js      # GraphQL type definitions
@@ -24,9 +24,9 @@ outrun-core/
 └── package.json
 ```
 
-### outrun-app (Frontend Application)
+### airank-app (Frontend Application)
 ```
-outrun-app/
+airank-app/
 ├── src/
 │   ├── graphql/
 │   │   ├── workflow-operations.js  # GraphQL queries/mutations
@@ -42,7 +42,7 @@ outrun-app/
 
 ## 📦 Components Implemented
 
-### outrun-core Components
+### airank-core Components
 
 #### 1. GraphQL Server (`src/index.js`)
 - Standalone GraphQL server on port 4000
@@ -80,7 +80,7 @@ outrun-app/
 - Batch import support
 - Triggers workflow events via database writes
 
-### outrun-app Components
+### airank-app Components
 
 #### 1. GraphQL Operations (`src/graphql/workflow-operations.js`)
 - Pre-defined queries, mutations, and subscriptions
@@ -98,7 +98,7 @@ outrun-app/
 
 ## 🔄 Data Flow
 
-1. **Workflow Creation**: Frontend → GraphQL (outrun-core) → MongoDB
+1. **Workflow Creation**: Frontend → GraphQL (airank-core) → MongoDB
 2. **Trigger Setup**: Workflow activation → GraphQL → Listener Service
 3. **Event Detection**: 
    - Webhooks: External → Stream Service → MongoDB → GraphQL Subscription → Listener
@@ -109,9 +109,9 @@ outrun-app/
 
 ## 🚀 Deployment Instructions
 
-### 1. Set up outrun-core
+### 1. Set up airank-core
 ```bash
-cd outrun-core
+cd airank-core
 cp .env.example .env
 # Edit .env with your configuration
 
@@ -125,8 +125,8 @@ cd services/stream-service && npm install && cd ../..
 docker-compose up -d
 ```
 
-### 2. Configure outrun-app
-Update your frontend configuration to point to the outrun-core GraphQL endpoint:
+### 2. Configure airank-app
+Update your frontend configuration to point to the airank-core GraphQL endpoint:
 ```javascript
 // In your Apollo Client configuration
 const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:4000/graphql';
@@ -135,9 +135,9 @@ const wsEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT || 'ws://localhos
 
 ### 3. Environment Variables
 
-#### outrun-core (.env)
+#### airank-core (.env)
 ```env
-MONGODB_URI=mongodb://admin:password@localhost:27017/outrun?authSource=admin
+MONGODB_URI=mongodb://admin:password@localhost:27017/airank?authSource=admin
 REDIS_URL=redis://:password@localhost:6379
 PORT=4000
 WEBHOOK_SECRET=your-webhook-secret
@@ -145,7 +145,7 @@ MAX_CONCURRENT_WORKFLOWS=5
 WORKFLOW_TIMEOUT=300000
 ```
 
-#### outrun-app (.env.local)
+#### airank-app (.env.local)
 ```env
 NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://localhost:4000/graphql
 NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT=ws://localhost:4000/graphql
@@ -161,7 +161,7 @@ NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT=ws://localhost:4000/graphql
 
 ## � Architecture Benefits
 
-1. **Separation of Concerns**: Backend services isolated in outrun-core
+1. **Separation of Concerns**: Backend services isolated in airank-core
 2. **Scalability**: Each service can be scaled independently
 3. **Real-time Updates**: GraphQL subscriptions provide live status
 4. **Event-Driven**: Workflows respond automatically to events
@@ -170,9 +170,9 @@ NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT=ws://localhost:4000/graphql
 
 ## 🧪 Testing the Implementation
 
-1. Start outrun-core services:
+1. Start airank-core services:
    ```bash
-   cd outrun-core
+   cd airank-core
    docker-compose up -d
    ```
 
@@ -196,8 +196,8 @@ NEXT_PUBLIC_GRAPHQL_WS_ENDPOINT=ws://localhost:4000/graphql
 
 ## 🚨 Important Notes
 
-- The GraphQL server in outrun-core runs on port 4000
-- All backend workflow logic is now in outrun-core
-- Frontend components in outrun-app communicate via GraphQL
+- The GraphQL server in airank-core runs on port 4000
+- All backend workflow logic is now in airank-core
+- Frontend components in airank-app communicate via GraphQL
 - Services communicate internally via Docker network
 - MongoDB collections are workspace-specific for data isolation

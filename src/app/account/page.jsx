@@ -198,7 +198,7 @@ export default function AccountPage() {
 
   return (
     <AccountLayout routerType="app">
-      <Meta title="Outrun - Dashboard" />
+      <Meta title="AI Rank - Dashboard" />
       <Content.Title
         title={t('workspace.dashboard.header.title')}
         subtitle={t("workspace.dashboard.header.description")}

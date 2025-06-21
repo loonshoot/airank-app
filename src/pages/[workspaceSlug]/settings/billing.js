@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import formatDistance from 'date-fns/formatDistance';
+import { formatDistance } from 'date-fns';
 import Link from 'next/link';
 import { getSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
@@ -41,7 +41,7 @@ const Billing = ({ invoices, products }) => {
   return (
     <AccountLayout>
       <Script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="loonshoot-test" ></Script>
-      <Meta title="Outrun - Billing" />
+      <Meta title="AI Rank - Billing" />
       <Content.Title
         title="Billing"
         subtitle="Manage your billing and preferences"
@@ -51,7 +51,7 @@ const Billing = ({ invoices, products }) => {
         <Card>
           <Card.Body
             title="Setup payment details"
-            subtitle="Your usage of outrun will be limited until you setup your payment method."
+            subtitle="Your usage of airank will be limited until you setup your payment method."
           >
           </Card.Body>
           <Card.Footer>
@@ -121,7 +121,7 @@ const Billing = ({ invoices, products }) => {
         </Content.Container>
       ) : (
         <Content.Empty>
-          Once you&apos;ve paid for something on Outrun, invoices will show
+          Once you&apos;ve paid for something on AI Rank, invoices will show
           up here
         </Content.Empty>
       )} */}

@@ -170,7 +170,6 @@ export class AgentWorkflowRunner {
       return {
         type: 'ai-result',
         output: result.finalOutput,
-        usage: result.usage,
         context: { ...context, ai_executed: true }
       }
     } catch (error) {
@@ -184,7 +183,7 @@ export class AgentWorkflowRunner {
         method: method || 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'User-Agent': 'Outrun-Workflow-Runner'
+          'User-Agent': 'AI Rank-Workflow-Runner'
         },
         body: JSON.stringify(data)
       })

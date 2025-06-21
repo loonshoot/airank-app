@@ -1,6 +1,6 @@
 module.exports = {
   images: {
-    domains: ['cdn.getoutrun.com', 'img.logo.dev'],
+    domains: ['cdn.getairank.com', 'img.logo.dev'],
   },
   reactStrictMode: true,
 };
