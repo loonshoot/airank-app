@@ -80,6 +80,21 @@ const GET_ANALYTICS = gql`
         mentionCount
         percentage
       }
+      mentionsByModel {
+        modelName
+        mentionCount
+        percentage
+      }
+      ownBrandPromptPerformance {
+        prompt
+        winCount
+        percentage
+      }
+      competitorPromptPerformance {
+        prompt
+        winCount
+        percentage
+      }
     }
   }
 `;
@@ -108,6 +123,13 @@ const chartConfig = {
   }
 };
 
+const brandColors = [
+  "#10b981", "#34d399", "#6ee7b7", "#a7f3d0",
+  "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe",
+  "#f87171", "#fca5a5", "#fecaca", "#ef4444",
+];
+
+
 export default function DashboardPage({ params }) {
   const resolvedParams = use(params);
   const { workspaceSlug } = resolvedParams || {};
@@ -121,6 +143,8 @@ export default function DashboardPage({ params }) {
     start: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
     end: format(new Date(), 'yyyy-MM-dd')
   });
+  const [dynamicChartConfig, setDynamicChartConfig] = useState(chartConfig);
+  const [activeIndex, setActiveIndex] = useState(0);
 
   // Fetch analytics data
   useEffect(() => {
@@ -143,6 +167,31 @@ export default function DashboardPage({ params }) {
         
         if (result.data?.analytics) {
           setAnalyticsData(result.data.analytics);
+          console.log('analyticsData', result.data.analytics);
+          console.log('mentionsByModel', result.data.analytics.mentionsByModel);
+          console.log('ownBrandPromptPerformance', result.data.analytics.ownBrandPromptPerformance);
+          console.log('competitorPromptPerformance', result.data.analytics.competitorPromptPerformance);
+
+          // Dynamically generate chart config for brands
+          const newChartConfig = { ...chartConfig };
+          const brands = [
+            ...new Set(
+              result.data.analytics.dailyMentions.flatMap(day => 
+                day.brands.map(b => b.brandName)
+              )
+            )
+          ];
+
+          brands.forEach((brandName, index) => {
+            if (!newChartConfig[brandName]) {
+              newChartConfig[brandName] = {
+                label: brandName,
+                color: brandColors[index % brandColors.length],
+              };
+            }
+          });
+          setDynamicChartConfig(newChartConfig);
+
         } else if (result.error) {
           setError(result.error.message);
         }
@@ -189,29 +238,26 @@ export default function DashboardPage({ params }) {
   const prepareAreaChartData = () => {
     if (!analyticsData?.dailyMentions) return [];
     
+    const allBrands = [
+      ...new Set(analyticsData.dailyMentions.flatMap(day => day.brands.map(b => b.brandName)))
+    ];
+
     const dateMap = new Map();
     
     analyticsData.dailyMentions.forEach(day => {
-      let ownBrandCount = 0;
-      let competitorCount = 0;
+      const dayData = { date: day.date };
+      allBrands.forEach(brand => {
+        dayData[brand] = 0;
+      });
       
       day.brands.forEach(brand => {
-        if (brand.brandType === 'own') {
-          ownBrandCount += brand.mentionCount;
-        } else {
-          competitorCount += brand.mentionCount;
-        }
+        dayData[brand.brandName] = Number(brand.mentionCount);
       });
       
-      dateMap.set(day.date, {
-        date: day.date,
-        ownBrand: ownBrandCount,
-        competitor: competitorCount
-      });
+      dateMap.set(day.date, dayData);
     });
     
-    const allData = Array.from(dateMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
-    return allData;
+    return Array.from(dateMap.values()).sort((a, b) => new Date(a.date) - new Date(b.date));
   };
 
   // Prepare pie chart data  
@@ -220,7 +266,7 @@ export default function DashboardPage({ params }) {
     
     return analyticsData.shareOfVoice.map(item => ({
       name: item.brandName,
-      value: item.mentionCount,
+      value: Number(item.mentionCount),
       percentage: item.percentage,
       fill: item.brandType === 'own' ? "#10b981" : "#ef4444"
     }));
@@ -232,11 +278,40 @@ export default function DashboardPage({ params }) {
     
     return analyticsData.brandSentiments.map(brand => ({
       brand: brand.brandName,
-      positive: brand.positive,
-      negative: brand.negative,
-      notDetermined: brand.notDetermined,
+      positive: Number(brand.positive),
+      negative: Number(brand.negative),
+      notDetermined: Number(brand.notDetermined),
       total: brand.total
     }));
+  };
+
+  const preparePromptPerformanceData = () => {
+    if (!analyticsData?.ownBrandPromptPerformance && !analyticsData?.competitorPromptPerformance) return [];
+
+    const promptMap = new Map();
+
+    analyticsData.ownBrandPromptPerformance?.forEach(p => {
+      if (!promptMap.has(p.prompt)) {
+        promptMap.set(p.prompt, { prompt: p.prompt, ownBrand: 0, competitor: 0 });
+      }
+      promptMap.get(p.prompt).ownBrand = Number(p.winCount);
+    });
+
+    analyticsData.competitorPromptPerformance?.forEach(p => {
+      if (!promptMap.has(p.prompt)) {
+        promptMap.set(p.prompt, { prompt: p.prompt, ownBrand: 0, competitor: 0 });
+      }
+      promptMap.get(p.prompt).competitor = Number(p.winCount);
+    });
+
+    const combinedData = Array.from(promptMap.values());
+    combinedData.sort((a, b) => (b.ownBrand + b.competitor) - (a.ownBrand + a.competitor));
+    
+    return combinedData.slice(0, 10);
+  };
+
+  const onPieEnter = (_, index) => {
+    setActiveIndex(index);
   };
 
   if (isLoading) {
@@ -314,6 +389,17 @@ export default function DashboardPage({ params }) {
   const areaChartData = prepareAreaChartData();
   const pieChartData = preparePieChartData();
   const sentimentData = prepareSentimentData();
+  const promptPerformanceData = preparePromptPerformanceData();
+  const pieDataWithColors = pieChartData.map(item => ({
+    ...item,
+    fill: dynamicChartConfig[item.name]?.color || item.fill
+  }));
+
+  console.log('areaChartData', areaChartData.slice(0,5));
+  console.log('sentimentData', sentimentData);
+  console.log('pieChartData', pieChartData);
+  console.log('mentionsByModel converted', analyticsData?.mentionsByModel?.map(m => ({ ...m, mentionCount: Number(m.mentionCount) })));
+  console.log('promptPerformanceData', promptPerformanceData);
 
   return (
     <AccountLayout routerType="app">
@@ -344,11 +430,21 @@ export default function DashboardPage({ params }) {
               onChange={(e) => setDate({ start: new Date(dateRange.start), end: new Date(e.target.value) })}
               className="px-3 py-1 border border-border rounded bg-card"
             />
-            <div className="flex items-center space-x-2 ml-6">
-              <span>Quick:</span>
-              <button onClick={() => handleQuickRange('30d')} className="px-3 py-1 border border-border rounded bg-card hover:bg-muted">Last 30 days</button>
-              <button onClick={() => handleQuickRange('last_month')} className="px-3 py-1 border border-border rounded bg-card hover:bg-muted">Last Month</button>
-              <button onClick={() => handleQuickRange('3_months')} className="px-3 py-1 border border-border rounded bg-card hover:bg-muted">Last 3 Months</button>
+            <div className="flex items-center space-x-1 ml-4">
+              <span className="text-xs mr-1">Quick:</span>
+              {[
+                { label: '30d', text: 'Last 30d' },
+                { label: 'last_month', text: 'Last Mo.' },
+                { label: '3_months', text: 'Last 3M' },
+              ].map(({ label, text }) => (
+                <button
+                  key={label}
+                  onClick={() => handleQuickRange(label)}
+                  className="px-2 py-0.5 text-xs border border-border rounded-full bg-card hover:bg-muted"
+                >
+                  {text}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -401,9 +497,9 @@ export default function DashboardPage({ params }) {
             <CardDescription>Showing brand mention trends over time</CardDescription>
           </CardHeader>
           <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-            <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+            <ChartContainer config={dynamicChartConfig} className="aspect-auto h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart
+                <AreaChart
                   accessibilityLayer
                   data={areaChartData}
                   margin={{
@@ -431,57 +527,30 @@ export default function DashboardPage({ params }) {
                     cursor={false}
                     content={
                       <ChartTooltipContent
-                        config={chartConfig}
+                        config={dynamicChartConfig}
                         labelFormatter={(value) => {
                           return new Date(value).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           });
                         }}
-                        indicator="line"
+                        indicator="dot"
                       />
                     }
                   />
                   <Legend />
-                  <Line
-                    dataKey="ownBrand"
-                    type="natural"
-                    stroke="#10b981"
-                    strokeWidth={2}
-                    dot={{
-                      fill: "#10b981",
-                    }}
-                    activeDot={{
-                      r: 6,
-                    }}
-                  >
-                    <LabelList
-                      position="top"
-                      offset={12}
-                      className="fill-foreground"
-                      fontSize={12}
+                  {Object.keys(dynamicChartConfig).filter(key => !['ownBrand', 'competitor', 'positive', 'negative', 'notDetermined'].includes(key)).map((brand) => (
+                    <Area
+                      key={brand}
+                      dataKey={brand}
+                      type="natural"
+                      fill={dynamicChartConfig[brand].color}
+                      fillOpacity={0.4}
+                      stroke={dynamicChartConfig[brand].color}
+                      stackId="a"
                     />
-                  </Line>
-                  <Line
-                    dataKey="competitor"
-                    type="natural"
-                    stroke="#ef4444"
-                    strokeWidth={2}
-                    dot={{
-                      fill: "#ef4444",
-                    }}
-                    activeDot={{
-                      r: 6,
-                    }}
-                  >
-                    <LabelList
-                      position="top"
-                      offset={12}
-                      className="fill-foreground"
-                      fontSize={12}
-                    />
-                  </Line>
-                </LineChart>
+                  ))}
+                </AreaChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
@@ -496,20 +565,20 @@ export default function DashboardPage({ params }) {
               <CardDescription>Brand mention distribution</CardDescription>
             </CardHeader>
             <CardContent className="flex-1 pb-0">
-              <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[250px]">
+              <ChartContainer config={dynamicChartConfig} className="mx-auto aspect-square max-h-[250px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Tooltip
                       cursor={false}
-                      content={<ChartTooltipContent hideLabel config={chartConfig} />}
+                      content={<ChartTooltipContent hideLabel config={dynamicChartConfig} />}
                     />
                     <Pie
-                      data={pieChartData}
+                      data={pieDataWithColors}
                       dataKey="value"
                       nameKey="name"
                       innerRadius={60}
                       strokeWidth={5}
-                      activeIndex={0}
+                      activeIndex={activeIndex}
                       activeShape={({
                         outerRadius = 0,
                         ...props
@@ -523,8 +592,9 @@ export default function DashboardPage({ params }) {
                           />
                         </g>
                       )}
+                      onMouseEnter={onPieEnter}
                     >
-                      {pieChartData.map((entry, index) => (
+                      {pieDataWithColors.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.fill} />
                       ))}
                     </Pie>
@@ -534,6 +604,9 @@ export default function DashboardPage({ params }) {
             </CardContent>
             <CardFooter className="flex-col gap-2 text-sm">
               <div className="flex items-center gap-2 font-medium leading-none">
+                {pieDataWithColors[activeIndex]?.name} - {pieDataWithColors[activeIndex]?.percentage?.toFixed(1)}%
+              </div>
+              <div className="leading-none text-muted-foreground">
                 Distribution of brand mentions
               </div>
             </CardFooter>
@@ -570,16 +643,88 @@ export default function DashboardPage({ params }) {
                       content={<ChartTooltipContent indicator="dashed" config={chartConfig} />}
                     />
                     <Legend />
-                    <Bar dataKey="positive" fill="#10b981" radius={4} />
-                    <Bar dataKey="negative" fill="#ef4444" radius={4} />
-                    <Bar dataKey="notDetermined" fill="#6b7280" radius={4} />
+                    <Bar dataKey="positive" fill={chartConfig.positive.color} radius={4} />
+                    <Bar dataKey="negative" fill={chartConfig.negative.color} radius={4} />
+                    <Bar dataKey="notDetermined" fill={chartConfig.notDetermined.color} radius={4} />
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
           </Card>
         </div>
+
+        {/* New Row: LLM and Prompt Performance */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Mentions by Model</CardTitle>
+                    <CardDescription>Which AI models are mentioning you.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={200}>
+                      <BarChart data={analyticsData?.mentionsByModel?.map(m => ({ ...m, mentionCount: Number(m.mentionCount) }))} layout="vertical">
+                        <XAxis type="number" hide />
+                        <YAxis
+                            dataKey="modelName"
+                            type="category"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                        />
+                        <Tooltip
+                            cursor={false}
+                            content={
+                              <ChartTooltipContent
+                                indicator="dashed"
+                                hideLabel
+                                config={chartConfig}
+                              />
+                            }
+                        />
+                        <Bar dataKey="mentionCount" fill={chartConfig.ownBrand.color} radius={4}>
+                            <LabelList dataKey="mentionCount" position="right" offset={8} className="fill-foreground" />
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Prompt Performance</CardTitle>
+                    <CardDescription>Top prompts by mention wins for your brand vs. competitors.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <BarChart data={promptPerformanceData}>
+                        <CartesianGrid vertical={false} />
+                        <XAxis 
+                            dataKey="prompt" 
+                            tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
+                            angle={-45}
+                            textAnchor="end"
+                            height={70}
+                        />
+                        <YAxis />
+                        <Tooltip
+                            cursor={false}
+                            content={
+                              <ChartTooltipContent
+                                indicator="dashed"
+                                config={chartConfig}
+                              />
+                            }
+                        />
+                        <Legend />
+                        <Bar dataKey="ownBrand" name="Your Brand Wins" fill={chartConfig.ownBrand.color} radius={4} />
+                        <Bar dataKey="competitor" name="Competitor Wins" fill={chartConfig.competitor.color} radius={4} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                </CardContent>
+            </Card>
+        </div>
+
       </Content.Container>
     </AccountLayout>
   );
-} 
+}
