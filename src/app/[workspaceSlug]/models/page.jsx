@@ -14,7 +14,7 @@ import { useWorkspace } from '@/providers/workspace';
 import { useTranslation } from "react-i18next";
 import { gql } from '@apollo/client';
 import { executeQuery, executeMutation } from '@/graphql/operations';
-import { AVAILABLE_MODELS, PROVIDERS, getModelsByProvider } from '@/data/models';
+import { AVAILABLE_MODELS, PROVIDERS, getModelsByProvider, isModelHistoric } from '@/data/models';
 
 // Define GraphQL queries and mutations
 const GET_MODELS = gql`
@@ -76,6 +76,8 @@ const DELETE_MODEL = gql`
   }
 `;
 
+
+
 export default function ModelsPage({ params }) {
   const resolvedParams = use(params);
   const { workspaceSlug } = resolvedParams || {};
@@ -88,6 +90,7 @@ export default function ModelsPage({ params }) {
   const [enabledModels, setEnabledModels] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
 
   // Mark component as hydrated
   useEffect(() => {
@@ -239,6 +242,29 @@ export default function ModelsPage({ params }) {
                 {PROVIDERS.map((provider) => {
                   const providerModels = getModelsByProvider(provider.id);
                   
+                  // Get user's enabled models for this provider (including historic ones)
+                  const userEnabledModels = enabledModels.filter(userModel => 
+                    userModel.provider === provider.id && userModel.isEnabled
+                  );
+                  
+                  // Combine current available models with user's historic models
+                  const allModelsForProvider = [...providerModels];
+                  
+                  // Add user's historic models that aren't in current available models
+                  userEnabledModels.forEach(userModel => {
+                    if (!providerModels.find(availableModel => availableModel.id === userModel.modelId)) {
+                      allModelsForProvider.push({
+                        id: userModel.modelId,
+                        name: userModel.name,
+                        provider: userModel.provider,
+                        description: 'Historic model - no longer available for new selections',
+                        isHistoric: true
+                      });
+                    }
+                  });
+                  
+                  if (allModelsForProvider.length === 0) return null;
+                  
                   return (
                     <div key={provider.id}>
                       <div className="flex items-center space-x-3 mb-4">
@@ -246,44 +272,72 @@ export default function ModelsPage({ params }) {
                           {provider.name}
                         </h3>
                         <span className="text-sm text-light opacity-75">
-                          ({providerModels.filter(model => isModelEnabled(model.id)).length} of {providerModels.length} enabled)
+                          ({allModelsForProvider.filter(model => isModelEnabled(model.id)).length} of {allModelsForProvider.length} enabled)
                         </span>
                       </div>
                       
                       <div className="grid gap-3">
-                        {providerModels.map((model) => {
+                        {allModelsForProvider.map((model) => {
                           const enabled = isModelEnabled(model.id);
+                          const historic = model.isHistoric || isModelHistoric(model.id);
                           
                           return (
                             <div
                               key={model.id}
-                              className={`flex items-start space-x-3 p-3 border rounded-lg cursor-pointer transition-colors ${
-                                enabled 
-                                  ? 'border-gray-400 bg-transparent' 
-                                  : 'border-gray-400 hover:border-green-500 bg-transparent'
+                              className={`flex items-start space-x-3 p-3 border rounded-lg transition-colors ${
+                                historic
+                                  ? 'border-orange-400 bg-orange-50 bg-opacity-10'
+                                  : enabled 
+                                    ? 'border-gray-400 bg-transparent cursor-pointer' 
+                                    : 'border-gray-400 hover:border-green-500 bg-transparent cursor-pointer'
                               }`}
-                              onClick={() => !isSaving && handleModelToggle(model, !enabled)}
+                              onClick={() => !isSaving && !historic && handleModelToggle(model, !enabled)}
                             >
                               <input
                                 type="checkbox"
                                 checked={enabled}
                                 onChange={() => {}} // Handled by onClick above
-                                disabled={isSaving}
+                                disabled={isSaving || historic}
                                 className="mt-1 w-4 h-4 accent-[#43B929] border-gray-400 bg-transparent rounded focus:ring-green-500 disabled:opacity-50"
                               />
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
-                                  <h4 className="font-medium text-light">
+                                  <h4 className={`font-medium ${historic ? 'text-orange-400' : 'text-light'}`}>
                                     {model.name}
                                   </h4>
-                                  <span className="text-xs px-2 py-1 bg-transparent border border-gray-400 text-light rounded">
+                                  <span className={`text-xs px-2 py-1 bg-transparent border rounded ${
+                                    historic ? 'border-orange-400 text-orange-400' : 'border-gray-400 text-light'
+                                  }`}>
                                     {model.id}
                                   </span>
+                                  {historic && (
+                                    <span className="text-xs px-2 py-1 bg-orange-500 text-white rounded">
+                                      Historic
+                                    </span>
+                                  )}
                                 </div>
-                                <p className="text-sm text-light opacity-75 mt-1">
+                                <p className={`text-sm mt-1 ${historic ? 'text-orange-300' : 'text-light opacity-75'}`}>
                                   {model.description}
                                 </p>
+                                {historic && enabled && (
+                                  <p className="text-xs text-orange-300 mt-2 italic">
+                                    This model is historic and is no longer available in the {provider.name} user interface. 
+                                    If you remove it, you will no longer be able to add this model back to your workspace.
+                                  </p>
+                                )}
                               </div>
+                              {historic && enabled && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!isSaving) handleModelToggle(model, false);
+                                  }}
+                                  disabled={isSaving}
+                                  className="text-orange-400 hover:text-orange-300 text-sm underline disabled:opacity-50"
+                                >
+                                  Remove
+                                </button>
+                              )}
                             </div>
                           );
                         })}

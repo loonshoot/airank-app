@@ -110,9 +110,21 @@ export default function WorkspacePage({ params }) {
               <div className="flex space-x-4 mt-6">
                 <button 
                   onClick={() => router.push(`/${workspaceSlug}/dashboard`)}
-                  className="px-4 py-2 bg-light text-dark border-2 border-dark hover:bg-light-lg"
+                  className="px-4 py-2 bg-green-600 text-white border-2 border-green-600 hover:bg-green-700"
                 >
-                  Go to Dashboard
+                  View Analytics Dashboard
+                </button>
+                <button 
+                  onClick={() => router.push(`/${workspaceSlug}/prompts`)}
+                  className="px-4 py-2 bg-blue-600 text-white border-2 border-blue-600 hover:bg-blue-700"
+                >
+                  Manage Prompts
+                </button>
+                <button 
+                  onClick={() => router.push(`/${workspaceSlug}/brands`)}
+                  className="px-4 py-2 bg-amber-600 text-white border-2 border-amber-600 hover:bg-amber-700"
+                >
+                  Manage Brands
                 </button>
               </div>
               

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Test</title>
+    <style>
+        :root {
+            --radius: 0.625rem;
+            --background: oklch(1 0 0);
+            --foreground: oklch(0.141 0.005 285.823);
+            --card: oklch(1 0 0);
+            --card-foreground: oklch(0.141 0.005 285.823);
+            --chart-1: oklch(0.511 0.162 142.326);
+            --chart-2: oklch(0.704 0.191 22.216);
+            --chart-3: oklch(0.552 0.016 285.938);
+            --border: oklch(0.92 0.004 286.32);
+        }
+
+        .dark {
+            --background: oklch(0.141 0.005 285.823);
+            --foreground: oklch(0.985 0 0);
+            --card: oklch(0.21 0.006 285.885);
+            --card-foreground: oklch(0.985 0 0);
+            --chart-1: oklch(0.531 0.156 148.743);
+            --chart-2: oklch(0.704 0.191 22.216);
+            --chart-3: oklch(0.705 0.015 286.067);
+            --border: oklch(1 0 0 / 10%);
+        }
+
+        html {
+            background: hsl(var(--background));
+            color: hsl(var(--foreground));
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .test-card {
+            background: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .chart-color-1 {
+            color: hsl(var(--chart-1));
+        }
+
+        .chart-color-2 {
+            color: hsl(var(--chart-2));
+        }
+
+        .chart-color-3 {
+            color: hsl(var(--chart-3));
+        }
+
+        .color-test {
+            display: flex;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .color-box {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .chart-1-bg { background: hsl(var(--chart-1)); }
+        .chart-2-bg { background: hsl(var(--chart-2)); }
+        .chart-3-bg { background: hsl(var(--chart-3)); }
+    </style>
+</head>
+<body class="dark">
+    <h1>Shadcn/UI Theme Test</h1>
+    
+    <div class="test-card">
+        <h2>Chart Colors</h2>
+        <p class="chart-color-1">Chart Color 1 (Own Brand Green)</p>
+        <p class="chart-color-2">Chart Color 2 (Competitor Red)</p>
+        <p class="chart-color-3">Chart Color 3 (Neutral Gray)</p>
+    </div>
+
+    <div class="color-test">
+        <div class="color-box chart-1-bg">1</div>
+        <div class="color-box chart-2-bg">2</div>
+        <div class="color-box chart-3-bg">3</div>
+    </div>
+
+    <div class="test-card">
+        <h3>CSS Variables Test</h3>
+        <p>Background: <span style="color: hsl(var(--background));">var(--background)</span></p>
+        <p>Foreground: <span style="color: hsl(var(--foreground));">var(--foreground)</span></p>
+        <p>Chart 1: <span style="color: hsl(var(--chart-1));">var(--chart-1)</span></p>
+        <p>Chart 2: <span style="color: hsl(var(--chart-2));">var(--chart-2)</span></p>
+        <p>Chart 3: <span style="color: hsl(var(--chart-3));">var(--chart-3)</span></p>
+    </div>
+</body>
+</html> 

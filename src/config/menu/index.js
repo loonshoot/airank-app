@@ -7,6 +7,10 @@ const menu = (workspaceId) => [
         path: `/${workspaceId}`,
       },
       {
+        name: 'Analytics',
+        path: `/${workspaceId}/dashboard`,
+      },
+      {
         name: 'common.label.prompts',
         path: `/${workspaceId}/prompts`,
       },
