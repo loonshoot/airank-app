@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { useTranslation } from "react-i18next";
 import { signOut } from 'next-auth/react';
 
-const Item = ({ data, isLoading }) => {
+const Item = ({ data = null, isLoading = false }) => {
   const { t } = useTranslation();
 
   const handleClick = () => {
@@ -31,9 +31,6 @@ const Item = ({ data, isLoading }) => {
   );
 };
 
-Item.defaultProps = {
-  data: null,
-  isLoading: false,
-};
+
 
 export default Item;

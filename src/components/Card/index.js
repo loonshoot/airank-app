@@ -42,7 +42,7 @@ Card.Empty = ({ children }) => {
 
 Card.Footer = ({ children }) => {
   return (
-    <div className="flex flex-row items-center justify-between px-5 py-3 space-x-5 bg-gray-100 border-t-b dark:border-t-gray-600 dark:bg-dark">
+    <div className="flex flex-row items-center justify-between px-5 py-3 space-x-5 bg-gray-100 border-t-b dark:border-t-gray-600 dark:bg-dark [&_small]:text-dark">
       {children}
     </div>
   );

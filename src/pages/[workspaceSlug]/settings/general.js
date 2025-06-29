@@ -4,6 +4,7 @@ import { getToken } from 'next-auth/jwt';
 import { useTranslation } from "react-i18next";
 import { useQuery, gql } from '@apollo/client';
 import { initializeApollo, addApolloState } from "@/lib/client/apollo";
+import { useWorkspace } from '@/providers/workspace';
 
 import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
@@ -27,20 +28,23 @@ query Sources($workspaceSlug: String!) {
 }
 `;
 
-const General = ({ isTeamOwner, workspace, sources, token }) => {
+const General = ({ isTeamOwner, workspace: serverWorkspace, sources, token }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('general');
+  const { workspace: contextWorkspace } = useWorkspace();
+  
+  // Use server workspace if available, otherwise fall back to context workspace
+  const workspace = serverWorkspace || contextWorkspace;
 
   const tabs = [
     { id: 'general', label: t("common.label.workspace") || "Workspace" },
     { id: 'team', label: t("settings.team.management") || "Team" },
-    { id: 'data', label: t("common.label.data") || "Data" },
     { id: 'billing', label: t("settings.workspace.billing") || "Billing" }
   ];
 
   return (
     <AccountLayout>
-      <Meta title={`AI Rank - ${workspace.name} | Settings`} />
+      <Meta title={`AI Rank - ${workspace?.name || 'Workspace'} | Settings`} />
       <Content.Title
         title={t("settings.workspace.settings")}
         subtitle={t("settings.general.workspace.description")}
@@ -49,9 +53,20 @@ const General = ({ isTeamOwner, workspace, sources, token }) => {
       <Content.Container>
         <TabNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
-        {activeTab === 'general' && <WorkspaceTab workspace={workspace} isTeamOwner={isTeamOwner} />}
-        {activeTab === 'team' && <TeamTab workspace={workspace} isTeamOwner={isTeamOwner} />}
-        {activeTab === 'billing' && <BillingTab />}
+        {!workspace ? (
+          <div className="text-center py-8">
+            <h3 className="text-lg font-semibold mb-2">Workspace Not Found</h3>
+            <p className="text-muted-foreground">
+              The workspace you're trying to access doesn't exist or you don't have permission to view it.
+            </p>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'general' && <WorkspaceTab workspace={workspace} isTeamOwner={isTeamOwner} />}
+            {activeTab === 'team' && <TeamTab workspace={workspace} isTeamOwner={isTeamOwner} />}
+            {activeTab === 'billing' && <BillingTab />}
+          </>
+        )}
       </Content.Container>
     </AccountLayout>
   );
