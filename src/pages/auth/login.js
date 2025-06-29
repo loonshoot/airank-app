@@ -59,7 +59,7 @@ const Login = () => {
         title="AI Rank | Login"
         description="Login to your AI Rank project"
       />
-      <div className="flex flex-col items-center justify-center p-5 m-auto space-y-5 rounded shadow-lg md:p-10 md:w-1/3 bg-yellow-400">
+      <div className="flex flex-col items-center justify-center p-5 m-auto space-y-5 rounded-lg shadow-2xl md:p-10 md:w-1/3 bg-card border border-border">
         <div>
           <Image
             src="/images/logo-light.svg"
@@ -69,14 +69,14 @@ const Login = () => {
           />
         </div>
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-green-600">{t('login.label')}</h1>
-          <h2 className="text-gray-600 pt-2">
+          <h1 className="text-2xl font-bold text-primary">{t('login.label')}</h1>
+          <h2 className="text-muted-foreground pt-2">
             {t('login.message.magiclink')}
           </h2>
         </div>
         <form className="flex flex-col w-full space-y-3">
           <input
-            className="px-3 py-2 border rounded"
+            className="px-3 py-2 bg-background border border-input rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             onChange={handleEmailChange}
             placeholder="user@email.com"
             type="email"
@@ -98,12 +98,12 @@ const Login = () => {
         </form>
         {socialProviders.length > 0 && (
           <>
-            <span className="text-sm text-light">or sign in with</span>
+            <span className="text-sm text-muted-foreground">or sign in with</span>
             <div className="flex flex-col w-full space-y-3">
               {socialProviders.map((provider, index) => (
                 <button
                   key={index}
-                  className="py-2 bg-gray-100 border rounded hover:bg-gray-50 disabled:opacity-75"
+                  className="py-2 bg-secondary text-secondary-foreground border border-border rounded-md hover:bg-secondary/80 disabled:opacity-75 transition-colors"
                   disabled={status === 'loading'}
                   onClick={() => signInWithSocial(provider.id)}
                 >

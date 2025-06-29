@@ -263,7 +263,7 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
                             member.status === InvitationStatus.ACCEPTED
                               ? 'bg-pink-600 text-light'
                               : member.status === InvitationStatus.PENDING
-                              ? 'bg-yellow-400 text-blue-dark'
+                              ? 'bg-primary text-primary-foreground'
                               : 'bg-red-200 text-red-600',
                           ].join(' ')}
                         >

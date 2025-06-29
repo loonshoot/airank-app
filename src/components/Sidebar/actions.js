@@ -200,13 +200,13 @@ const Actions = ({ routerType }) => {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute w-full py-1 mt-1 overflow-auto text-base bg-light-md max-h-60 bg-yellow-400">
+              <Listbox.Options className="absolute w-full py-1 mt-1 overflow-auto text-base bg-dark border-2 border-black shadow-lg max-h-60 rounded-md">
                 {workspaces.map((ws, index) => (
                   <Listbox.Option
                     key={index}
                     className={({ active }) =>
-                      `${active ? 'text-green-600 bg-blue-200' : 'text-dark'}
-                        border-2 border-dark cursor-pointer select-none relative py-2 pl-4 pr-4`
+                      `${active ? 'bg-accent text-accent-foreground' : 'text-foreground'}
+                        cursor-pointer select-none relative py-2 pl-4 pr-4 hover:bg-accent hover:text-accent-foreground`
                     }
                     value={ws}
                   >
@@ -236,8 +236,8 @@ const Actions = ({ routerType }) => {
                 <Listbox.Option
                   onClick={toggleModal}
                   className={({ active }) =>
-                    `${active ? 'text-green-600 bg-blue-200' : 'text-light'}
-                      border-2 border-dark cursor-pointer bg-dark select-none relative py-4 pl-4`
+                    `${active ? 'bg-primary text-primary-foreground' : 'text-foreground bg-primary/10'}
+                      cursor-pointer select-none relative py-3 pl-4 pr-4 border-t border-border hover:bg-primary hover:text-primary-foreground`
                   }
                   value={workspace}
                 >
