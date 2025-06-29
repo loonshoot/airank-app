@@ -7,8 +7,10 @@ import { AccountLayout } from '@/layouts/index';
 import Meta from '@/components/Meta/index';
 import Content from '@/components/Content/index';
 import { gql } from '@apollo/client';
-import { executeQuery } from '@/graphql/operations';
+import { executeQuery, executeMutation } from '@/graphql/operations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import Button from '@/components/Button/index';
+import toast from 'react-hot-toast';
 import { 
   ChartContainer, 
   ChartTooltip, 
@@ -99,6 +101,16 @@ const GET_ANALYTICS = gql`
   }
 `;
 
+// GraphQL mutation for scheduling jobs
+const SCHEDULE_JOB = gql`
+  mutation ScheduleJob($workspaceId: String!, $jobs: [JobScheduleInput]!) {
+    scheduleJobs(workspaceId: $workspaceId, jobs: $jobs) {
+      id
+      nextRunAt
+    }
+  }
+`;
+
 // Chart configuration with explicit colors that work with our dark theme
 const chartConfig = {
   ownBrand: {
@@ -145,6 +157,7 @@ export default function WorkspacePage({ params }) {
   });
   const [dynamicChartConfig, setDynamicChartConfig] = useState(chartConfig);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isSchedulingJob, setIsSchedulingJob] = useState(false);
 
   // Fetch analytics data
   useEffect(() => {
@@ -310,6 +323,48 @@ export default function WorkspacePage({ params }) {
     setActiveIndex(index);
   };
 
+  // Function to schedule a test job
+  const scheduleTestJob = async () => {
+    if (!workspace?._id) {
+      toast.error('Workspace not loaded');
+      return;
+    }
+
+    setIsSchedulingJob(true);
+    
+    try {
+      const result = await executeMutation(
+        graphqlClient,
+        SCHEDULE_JOB,
+        {
+          workspaceId: workspace._id,
+          jobs: [
+            {
+              name: 'promptModelTester',
+              schedule: 'now',
+              data: {
+                workspaceId: workspace._id
+              }
+            }
+          ]
+        }
+      );
+      
+      if (result.data?.scheduleJobs) {
+        toast.success(`Job scheduled successfully! Job ID: ${result.data.scheduleJobs[0].id}`);
+        console.log('Scheduled job:', result.data.scheduleJobs[0]);
+      } else if (result.error) {
+        toast.error(`Failed to schedule job: ${result.error.message}`);
+        console.error('Job scheduling error:', result.error);
+      }
+    } catch (err) {
+      toast.error(`Error scheduling job: ${err.message}`);
+      console.error('Job scheduling error:', err);
+    } finally {
+      setIsSchedulingJob(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <AccountLayout routerType="app">
@@ -375,6 +430,29 @@ export default function WorkspacePage({ params }) {
                   To see your analytics dashboard, you need to set up your prompts and run analysis.
                 </p>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Temporary Testing Button */}
+          <Card className="mt-6 border-dashed border-2 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+            <CardHeader>
+              <CardTitle className="text-yellow-700 dark:text-yellow-300">🧪 Testing Tools</CardTitle>
+              <CardDescription className="text-yellow-600 dark:text-yellow-400">
+                Temporary testing controls - will be removed after setup
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-yellow-600 dark:text-yellow-400 mb-4">
+                This will run the prompt model tester job immediately, which tests all prompts against all enabled models and performs sentiment analysis. This should generate the data needed to see your analytics dashboard.
+              </p>
+              <Button 
+                background="Pink" 
+                border="Light"
+                onClick={scheduleTestJob}
+                disabled={isSchedulingJob}
+              >
+                {isSchedulingJob ? 'Scheduling Job...' : 'Run Prompt Model Test Job Now'}
+              </Button>
             </CardContent>
           </Card>
         </Content.Container>
