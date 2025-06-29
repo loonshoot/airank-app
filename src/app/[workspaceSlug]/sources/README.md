@@ -77,7 +77,7 @@ Create callback handlers for remaining sources:
 ### 3. Environment Variables
 Ensure these are set:
 ```env
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=http://localhost:4000
 HUBSPOT_CLIENT_ID=xxx
 HUBSPOT_CLIENT_SECRET=xxx
 GOOGLE_CLIENT_ID=xxx

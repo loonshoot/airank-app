@@ -52,7 +52,7 @@ graph TB
     }
   ],
   settings: {
-    timeout: 300000,
+    timeout: 400000,
     retryPolicy: { maxRetries: 3, backoffStrategy: "exponential" },
     concurrency: 1
   },
@@ -192,7 +192,7 @@ LISTENER_SERVICE_URL=http://localhost:3006
 OPENAI_API_KEY=your_openai_key
 
 # airank-app/.env.local
-WORKFLOW_API_URL=http://localhost:3001  # Through API gateway
+WORKFLOW_API_URL=http://localhost:4001  # Through API gateway
 ```
 
 ## 🚦 **Development Commands**

@@ -142,7 +142,7 @@ REDIS_URL=redis://:password@localhost:6379
 PORT=4000
 WEBHOOK_SECRET=your-webhook-secret
 MAX_CONCURRENT_WORKFLOWS=5
-WORKFLOW_TIMEOUT=300000
+WORKFLOW_TIMEOUT=400000
 ```
 
 #### airank-app (.env.local)

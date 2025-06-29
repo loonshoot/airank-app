@@ -3,7 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 
 // Create a standard http link pointing to external API Gateway
 const httpLink = createHttpLink({
-  uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT_URL || 'http://localhost:3001/graphql',
+  uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT_URL || 'http://localhost:4001/graphql',
 });
 
 // Add auth headers to requests

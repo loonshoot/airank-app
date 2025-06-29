@@ -1,5 +1,5 @@
 ---
-description: Access the ui at http://localhost:3000
+description: Access the ui at http://localhost:4000
 globs: ["src/**/*.jsx", "src/**/*.js"]
 alwaysApply: true
 ---

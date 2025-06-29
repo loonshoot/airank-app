@@ -27,7 +27,7 @@ export type {
 } from './WorkflowAPI';
 
 // Use separate airank-core GraphQL endpoint
-const OUTRUN_CORE_GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_OUTRUN_CORE_GRAPHQL_ENDPOINT || 'http://localhost:3002/graphql';
+const OUTRUN_CORE_GRAPHQL_ENDPOINT = process.env.NEXT_PUBLIC_OUTRUN_CORE_GRAPHQL_ENDPOINT || 'http://localhost:4002/graphql';
 
 export class WorkflowGraphQLClient {
   private client: ApolloClient<any>;

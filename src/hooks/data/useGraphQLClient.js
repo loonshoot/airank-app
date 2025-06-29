@@ -52,7 +52,7 @@ export default function useGraphQLClient() {
   const client = useMemo(() => {
     // Create HTTP link to external GraphQL API
     const httpLink = new HttpLink({
-      uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT_URL || 'http://localhost:3001/graphql',
+      uri: process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT_URL || 'http://localhost:4001/graphql',
     });
 
     // Create error handling link
