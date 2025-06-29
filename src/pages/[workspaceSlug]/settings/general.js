@@ -14,7 +14,6 @@ import TabNavigation from '@/components/TabNavigation';
 
 import WorkspaceTab from './components/WorkspaceTab';
 import TeamTab from './components/TeamTab';
-import DataTab from './components/DataTab';
 import BillingTab from './components/BillingTab';
 
 const sourcesQuery = gql`
@@ -52,7 +51,6 @@ const General = ({ isTeamOwner, workspace, sources, token }) => {
 
         {activeTab === 'general' && <WorkspaceTab workspace={workspace} isTeamOwner={isTeamOwner} />}
         {activeTab === 'team' && <TeamTab workspace={workspace} isTeamOwner={isTeamOwner} />}
-        {activeTab === 'data' && <DataTab sources={sources} workspace={workspace} token={token} />}
         {activeTab === 'billing' && <BillingTab />}
       </Content.Container>
     </AccountLayout>
