@@ -53,7 +53,7 @@ const Sidebar = ({ menu, routerType }) => {
   return (
     <div className="md:w-1/4">
       {/* Logo and Mobile Menu Button */}
-      <div className="flex items-center justify-center p-4 border-b border-b-dark md:hidden" style={{ backgroundColor: '#101624' }}>
+      <div className="flex items-center justify-center p-4 border-b border-zinc-800/50 md:hidden bg-[#0a0a0a]">
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
             src="/images/logo-light.svg"
@@ -73,17 +73,16 @@ const Sidebar = ({ menu, routerType }) => {
       </div>
 
       {/* Sidebar */}
-      <aside 
+      <aside
         className={`
           fixed md:sticky top-[72px] md:top-0 w-full h-[calc(100vh-72px)] md:h-screen
           ${showMenu ? 'block' : 'hidden md:block'}
-          overflow-y-auto
+          overflow-y-auto bg-[#0a0a0a]
         `}
-        style={{ backgroundColor: '#43B929' }}
       >
         <div className="flex flex-col h-full">
           {/* Logo Section (Desktop Only) */}
-          <div className="relative hidden md:flex items-center justify-center p-5 border-b border-b-dark" style={{ backgroundColor: '#101624' }}>
+          <div className="relative hidden md:flex items-center justify-center p-5 border-b border-zinc-800/50">
             <Link href="/" className="flex-grow text-2xl font-bold">
               <Image
                 src="/images/logo-light.svg"

@@ -1,6 +1,6 @@
 const Content = ({ children }) => {
   return (
-    <div className="flex flex-col h-full px-5 pb-5 [&>*+*]:pt-5 overflow-y-auto md:p-10 md:w-3/4">
+    <div className="flex flex-col h-full px-5 pb-5 [&>*+*]:pt-5 overflow-y-auto md:p-10 md:w-3/4 bg-[#0a0a0a]">
       {children}
     </div>
   );
@@ -21,8 +21,8 @@ Content.Divider = ({ thick }) => {
 Content.Empty = ({ children }) => {
   return (
     <div>
-      <div className="flex items-center justify-center p-5 bg-gray-100 border-4 border-dashed">
-        <p>{children}</p>
+      <div className="flex items-center justify-center p-5 bg-zinc-800/50 border-2 border-dashed border-zinc-700 rounded-lg">
+        <p className="text-gray-400">{children}</p>
       </div>
     </div>
   );

@@ -121,7 +121,8 @@ const Actions = ({ routerType }) => {
   const toggleModal = () => setModalState(!showModal);
 
   // Only render loading state if no workspaces have been loaded previously
-  if (isLoading && !workspaces?.length) {
+  // But always render on account pages since they don't depend on workspace data
+  if (isLoading && !workspaces?.length && !isAccountPage) {
     return null; // Return nothing while initial loading
   }
 
@@ -135,7 +136,7 @@ const Actions = ({ routerType }) => {
           width="Full"
           onClick={toggleModal}
         >
-          <PlusIcon className="w-5 h-5 text-light" aria-hidden="true" />
+          <PlusIcon className="w-5 h-5" aria-hidden="true" />
           <span>{t('workspace.action.button.label')}</span>
         </Button>
       )}
@@ -178,8 +179,8 @@ const Actions = ({ routerType }) => {
       {workspaces && workspaces.length > 0 && !isAccountPage && (
         <Listbox value={workspace} onChange={handleWorkspaceChange}>
           <div className="relative">
-            <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-light-lg border-2 border-dark cursor-default">
-              <span className="block text-dark truncate">
+            <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-[#0a0a0a] border border-zinc-800/50 rounded-lg cursor-default hover:border-green-600/30 transition-colors">
+              <span className="block text-white truncate">
                 {!workspaces?.length
                   ? ""
                   : !workspace
@@ -188,7 +189,7 @@ const Actions = ({ routerType }) => {
               </span>
               <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                 <ChevronUpDownIcon
-                  className="w-5 h-5 text-dark"
+                  className="w-5 h-5 text-white"
                   aria-hidden="true"
                 />
               </span>
@@ -200,13 +201,13 @@ const Actions = ({ routerType }) => {
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute w-full py-1 mt-1 overflow-auto text-base bg-dark border-2 border-black shadow-lg max-h-60 rounded-md">
+              <Listbox.Options className="absolute w-full py-1 mt-1 overflow-auto text-base bg-[#0a0a0a] border border-zinc-800/50 shadow-lg max-h-60 rounded-lg">
                 {workspaces.map((ws, index) => (
                   <Listbox.Option
                     key={index}
                     className={({ active }) =>
-                      `${active ? 'bg-accent text-accent-foreground' : 'text-foreground'}
-                        cursor-pointer select-none relative py-2 pl-4 pr-4 hover:bg-accent hover:text-accent-foreground`
+                      `${active ? 'bg-zinc-700 text-white' : 'text-white'}
+                        cursor-pointer select-none relative py-2 pl-4 pr-4 hover:bg-zinc-700`
                     }
                     value={ws}
                   >
@@ -222,7 +223,7 @@ const Actions = ({ routerType }) => {
                         {selected ? (
                           <span
                             className={`${
-                              active ? 'text-blue-600' : 'text-blue-600'
+                              active ? 'text-green-600' : 'text-green-600'
                             } absolute inset-y-0 right-2 flex items-center pl-3`}
                           >
                             <CheckIcon className="w-5 h-5" aria-hidden="true" />
@@ -236,8 +237,8 @@ const Actions = ({ routerType }) => {
                 <Listbox.Option
                   onClick={toggleModal}
                   className={({ active }) =>
-                    `${active ? 'bg-primary text-primary-foreground' : 'text-foreground bg-primary/10'}
-                      cursor-pointer select-none relative py-3 pl-4 pr-4 border-t border-border hover:bg-primary hover:text-primary-foreground`
+                    `${active ? 'bg-green-600 text-black' : 'text-white bg-zinc-800'}
+                      cursor-pointer select-none relative py-3 pl-4 pr-4 border-t border-zinc-800/50 hover:bg-green-600 hover:text-black`
                   }
                   value={workspace}
                 >

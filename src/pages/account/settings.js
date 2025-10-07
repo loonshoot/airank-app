@@ -105,7 +105,7 @@ const Settings = ({ user }) => {
   };
 
   return (
-    <AccountLayout>
+    <AccountLayout routerType="pages">
       <Meta title="AI Rank - Account Settings" />
       <Content.Title
         title={t("settings.header.title")}

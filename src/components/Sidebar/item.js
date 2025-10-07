@@ -15,15 +15,15 @@ const Item = ({ data = null, isLoading = false }) => {
   };
 
   return isLoading ? (
-    <div className="h-6 mb-3 bg-gray-600 animate-pulse" />
+    <div className="h-6 mb-3 bg-zinc-700 animate-pulse" />
   ) : (
     <li>
       {data.onClick ? (
-        <a onClick={handleClick} className="text-dark hover:text-dark cursor-pointer">
+        <a onClick={handleClick} className="text-white hover:text-gray-400 cursor-pointer transition-colors">
           {t(data.name)}
         </a>
       ) : (
-        <Link href={data.path} className="text-dark hover:text-dark">
+        <Link href={data.path} className="text-white hover:text-gray-400 transition-colors">
           {t(data.name)}
         </Link>
       )}

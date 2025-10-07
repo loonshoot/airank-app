@@ -1,12 +1,12 @@
 import '@/styles/globals.css';
-import { Fira_Code } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import { getServerSession } from 'next-auth/next';
 import { Providers } from './providers';
 
-// Use Fira Code font to match the Pages Router
-const fira = Fira_Code({ 
+const inter = Inter({
   subsets: ['latin'],
-  display: 'swap'
+  display: 'swap',
+  variable: '--font-inter',
 });
 
 export const metadata = {
@@ -16,10 +16,10 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
   const session = await getServerSession();
-  
+
   return (
-    <html lang="en" className={fira.className}>
-      <body className={fira.className}>
+    <html lang="en" className={`dark ${inter.variable}`}>
+      <body className={inter.className}>
         <Providers session={session}>
           {children}
         </Providers>

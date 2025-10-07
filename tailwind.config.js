@@ -3,8 +3,8 @@ module.exports = {
   darkMode: 'class',
   theme: {
     fontFamily: {
-      sans: ['Outfit', 'sans-serif'],
-      mono: ['var(--font-mono)'],
+      sans: ['Inter', 'sans-serif'],
+      mono: ['ui-monospace', 'monospace'],
     },
     container: {
       center: true,
@@ -16,11 +16,44 @@ module.exports = {
     extend: {
       animation: {
         'spin': 'spin 4s linear infinite',
+        'pulse-glow': 'pulse-glow 4s ease-in-out infinite',
+        'pulse-glow-reverse': 'pulse-glow-reverse 5s ease-in-out infinite',
+        'pulse-glow-slow': 'pulse-glow-slow 6s ease-in-out infinite',
       },
       keyframes: {
         spin: {
           from: { transform: 'rotate(0deg)' },
           to: { transform: 'rotate(360deg)' },
+        },
+        'pulse-glow': {
+          '0%, 100%': {
+            opacity: '0.6',
+            transform: 'scale(1) translate(0, 0)',
+          },
+          '50%': {
+            opacity: '1',
+            transform: 'scale(1.2) translate(10%, -10%)',
+          },
+        },
+        'pulse-glow-reverse': {
+          '0%, 100%': {
+            opacity: '0.7',
+            transform: 'scale(1) translate(0, 0)',
+          },
+          '50%': {
+            opacity: '1',
+            transform: 'scale(1.15) translate(-6%, 6%)',
+          },
+        },
+        'pulse-glow-slow': {
+          '0%, 100%': {
+            opacity: '0.5',
+            transform: 'scale(1) translate(0, 0)',
+          },
+          '50%': {
+            opacity: '0.9',
+            transform: 'scale(1.3) translate(-10%, 10%)',
+          },
         },
       },
       colors: {
@@ -69,7 +102,7 @@ module.exports = {
         600: '#FE0170',
       },
         'green': {
-          600: '#51F72B',
+          600: '#16a34a', // Match airank-website green
         },
       'yellow': {
         400: '#FFC403',

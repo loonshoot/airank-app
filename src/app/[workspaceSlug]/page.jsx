@@ -115,15 +115,15 @@ const SCHEDULE_JOB = gql`
 const chartConfig = {
   ownBrand: {
     label: "Own Brand",
-    color: "#10b981", // Green for own brand
+    color: "#16a34a", // Green matching website
   },
   competitor: {
-    label: "Competitor", 
+    label: "Competitor",
     color: "#ef4444", // Red for competitor
   },
   positive: {
     label: "Positive",
-    color: "#10b981", // Green for positive
+    color: "#16a34a", // Green matching website
   },
   negative: {
     label: "Negative",
@@ -136,9 +136,9 @@ const chartConfig = {
 };
 
 const brandColors = [
-  "#10b981", "#34d399", "#6ee7b7", "#a7f3d0",
-  "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe",
-  "#f87171", "#fca5a5", "#fecaca", "#ef4444",
+  "#16a34a", "#15803d", "#14532d", "#166534", // Green shades matching website
+  "#0d9488", "#0f766e", "#115e59", "#134e4a", // Teal accents
+  "#ef4444", "#dc2626", "#b91c1c", "#991b1b", // Red for competitors
 ];
 
 
