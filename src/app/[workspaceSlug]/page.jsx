@@ -111,23 +111,23 @@ const SCHEDULE_JOB = gql`
   }
 `;
 
-// Chart configuration with explicit colors that work with our dark theme
+// Chart configuration with vibrant neon colors
 const chartConfig = {
   ownBrand: {
     label: "Own Brand",
-    color: "#16a34a", // Green matching website
+    color: "#22d35f", // Neon green
   },
   competitor: {
     label: "Competitor",
-    color: "#ef4444", // Red for competitor
+    color: "#ff0099", // Hot magenta
   },
   positive: {
     label: "Positive",
-    color: "#16a34a", // Green matching website
+    color: "#22d35f", // Neon green
   },
   negative: {
     label: "Negative",
-    color: "#ef4444", // Red for negative
+    color: "#ff0099", // Hot magenta
   },
   notDetermined: {
     label: "Neutral",
@@ -136,9 +136,13 @@ const chartConfig = {
 };
 
 const brandColors = [
-  "#16a34a", "#15803d", "#14532d", "#166534", // Green shades matching website
-  "#0d9488", "#0f766e", "#115e59", "#134e4a", // Teal accents
-  "#ef4444", "#dc2626", "#b91c1c", "#991b1b", // Red for competitors
+  "#22d35f", // Neon green
+  "#00d9ff", // Electric cyan
+  "#ff0099", // Hot magenta
+  "#a6ff00", // Laser lime
+  "#9945ff", // Plasma purple
+  "#ff6b35", // Solar orange
+  "#ffeb3b", // Volt yellow
 ];
 
 

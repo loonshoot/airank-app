@@ -26,11 +26,13 @@
     --border: 0 0% 15%; /* Darker, more subtle borders */
     --input: 0 0% 20%;
     --ring: 0 0% 83%;
-    --chart-1: 142 71% 45%; /* #16a34a - primary green matching website */
-    --chart-2: 142 76% 36%; /* darker green variant */
-    --chart-3: 142 72% 29%; /* even darker green */
-    --chart-4: 160 60% 45%; /* teal accent */
-    --chart-5: 173 58% 39%; /* cyan-teal accent */
+    --chart-1: 142 75% 56%; /* #22d35f - neon green */
+    --chart-2: 190 100% 50%; /* #00d9ff - electric cyan */
+    --chart-3: 328 100% 50%; /* #ff0099 - hot magenta */
+    --chart-4: 73 100% 50%; /* #a6ff00 - laser lime */
+    --chart-5: 262 100% 64%; /* #9945ff - plasma purple */
+    --chart-6: 14 100% 60%; /* #ff6b35 - solar orange */
+    --chart-7: 50 100% 62%; /* #ffeb3b - volt yellow */
   }
 
   .dark {
@@ -52,11 +54,13 @@
     --border: 0 0% 15%; /* Darker, more subtle borders */
     --input: 0 0% 20%;
     --ring: 0 0% 83%;
-    --chart-1: 142 71% 45%; /* #16a34a - primary green matching website */
-    --chart-2: 142 76% 36%; /* darker green variant */
-    --chart-3: 142 72% 29%; /* even darker green */
-    --chart-4: 160 60% 45%; /* teal accent */
-    --chart-5: 173 58% 39%; /* cyan-teal accent */
+    --chart-1: 142 75% 56%; /* #22d35f - neon green */
+    --chart-2: 190 100% 50%; /* #00d9ff - electric cyan */
+    --chart-3: 328 100% 50%; /* #ff0099 - hot magenta */
+    --chart-4: 73 100% 50%; /* #a6ff00 - laser lime */
+    --chart-5: 262 100% 64%; /* #9945ff - plasma purple */
+    --chart-6: 14 100% 60%; /* #ff6b35 - solar orange */
+    --chart-7: 50 100% 62%; /* #ffeb3b - volt yellow */
   }
 
   * {
