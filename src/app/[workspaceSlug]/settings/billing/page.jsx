@@ -130,26 +130,15 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
             </p>
           </div>
 
-          <div className="flex gap-3">
-            <Button
-              background="Green"
-              border="Light"
-              type="button"
-              onClick={onBack}
-              className="flex-1"
-            >
-              Back
-            </Button>
-            <Button
-              background="Pink"
-              border="Light"
-              type="submit"
-              disabled={!stripe || isProcessing}
-              className="flex-1"
-            >
-              {isProcessing ? 'Processing...' : 'Add Payment Method'}
-            </Button>
-          </div>
+          <Button
+            background="Green"
+            border="Light"
+            type="submit"
+            disabled={!stripe || isProcessing}
+            className="w-full"
+          >
+            {isProcessing ? 'Processing...' : 'Add Payment Method'}
+          </Button>
         </form>
       </CardContent>
     </Card>
