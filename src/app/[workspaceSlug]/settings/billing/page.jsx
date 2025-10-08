@@ -130,7 +130,7 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack, isUpdate = false
             </p>
           </div>
 
-          {!isUpdate && onBack && (
+          {!isUpdate && onBack ? (
             <div className="flex gap-3">
               <Button
                 background="Green"
@@ -151,9 +151,7 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack, isUpdate = false
                 {isProcessing ? 'Processing...' : 'Add Payment Method'}
               </Button>
             </div>
-          )}
-
-          {isUpdate && (
+          ) : (
             <Button
               background="Green"
               border="Light"
@@ -161,7 +159,7 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack, isUpdate = false
               disabled={!stripe || isProcessing}
               className="w-full"
             >
-              {isProcessing ? 'Processing...' : 'Update Card'}
+              {isProcessing ? 'Processing...' : (isUpdate ? 'Update Card' : 'Add Payment Method')}
             </Button>
           )}
         </form>
