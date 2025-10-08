@@ -22,6 +22,7 @@ const typeDefs = gql`
     slug: String!
     workspaceCode: String!
     inviteCode: String!
+    billingProfileId: String
     createdAt: String
     creator: User
     members: [Member]

@@ -10,6 +10,7 @@ export const GET_USER_WORKSPACES = gql`
       workspaceCode
       inviteCode
       creatorId
+      billingProfileId
       createdAt
       updatedAt
       chargebeeSubscriptionId
@@ -27,6 +28,7 @@ export const GET_ALL_WORKSPACES = gql`
       workspaceCode
       inviteCode
       creatorId
+      billingProfileId
       createdAt
       updatedAt
       chargebeeSubscriptionId
