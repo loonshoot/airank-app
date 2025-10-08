@@ -519,11 +519,11 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
 
       {/* Payment Method Modal */}
       {showPaymentForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="max-w-lg w-full relative">
             <button
               onClick={() => setShowPaymentForm(false)}
-              className="absolute -top-2 -right-2 bg-card border border-border rounded-full p-2 z-10 hover:bg-muted"
+              className="absolute -top-2 -right-2 bg-zinc-900 border border-zinc-800 rounded-full p-2 z-10 hover:bg-zinc-800"
             >
               <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -542,14 +542,14 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
 
       {/* Plan Change Modal */}
       {isChangingPlan && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
           <div className="max-w-6xl w-full my-8">
-            <div className="bg-card rounded-lg p-6">
+            <div className="bg-[#0a0a0a] border border-zinc-800 rounded-lg p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">Change Plan</h2>
                 <button
                   onClick={() => setIsChangingPlan(false)}
-                  className="text-muted-foreground hover:text-foreground"
+                  className="text-gray-400 hover:text-white"
                 >
                   <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
