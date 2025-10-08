@@ -1,6 +1,11 @@
 const Button = ({ children, width, background, border, disabled = false, variant = 'default', ...rest }) => {
   // Match the website's CTA button style
   const getVariantClasses = () => {
+    // Support legacy background prop
+    if (background === 'Green' || background === 'Pink') {
+      return 'bg-green-600 text-black hover:bg-green-600/90 border-green-600 shadow-lg shadow-green-600/20 hover:shadow-green-600/40';
+    }
+
     if (variant === 'cta' || variant === 'primary') {
       return 'bg-green-600 text-black hover:bg-green-600/90 border-green-600 shadow-lg shadow-green-600/20 hover:shadow-green-600/40';
     }
