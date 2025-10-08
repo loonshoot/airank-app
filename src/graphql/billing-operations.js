@@ -49,16 +49,23 @@ export const GET_BILLING_PLANS = gql`
     billingPlans {
       id
       name
-      description
+      price
+      priceId
+      priceIdAnnual
+      annualPrice
+      annualSavings
       brandsLimit
       promptsLimit
       modelsLimit
       dataRetentionDays
       allowedModels
       batchFrequency
-      monthlyPrice
-      annualPrice
       features
+      isFree
+      isPopular
+      isEnterprise
+      target
+      costPerMonth
     }
   }
 `;

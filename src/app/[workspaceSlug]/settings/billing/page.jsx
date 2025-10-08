@@ -158,53 +158,36 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
 
 function PlanSelectionStep({ plans, billingProfile, selectedInterval, onIntervalChange, onPlanSelect }) {
   const getPlanPrice = (plan) => {
-    if (plan.id === 'free') {
+    if (plan.isFree || plan.id === 'free') {
       return { display: '$0', subtext: 'forever' };
     }
 
-    if (plan.id === 'enterprise') {
+    if (plan.isEnterprise || plan.id === 'enterprise') {
       return { display: 'Custom', subtext: 'contact sales' };
     }
 
-    const price = selectedInterval === 'annual' ? plan.annualPrice : plan.monthlyPrice;
-    const monthly = selectedInterval === 'annual' ? (price / 12).toFixed(0) : price;
+    // Use price (monthly) or annualPrice
+    if (selectedInterval === 'annual' && plan.annualPrice) {
+      // annualPrice is already formatted like "$290"
+      const annualAmount = parseInt(plan.annualPrice.replace(/[^0-9]/g, ''));
+      const monthly = (annualAmount / 12).toFixed(0);
+      return {
+        display: `$${monthly}`,
+        subtext: '/month (billed annually)'
+      };
+    }
 
+    // Use costPerMonth or parse from price
+    const monthlyAmount = plan.costPerMonth || parseInt((plan.price || '$0').replace(/[^0-9]/g, ''));
     return {
-      display: `$${monthly}`,
-      subtext: selectedInterval === 'annual' ? '/month (billed annually)' : '/month'
+      display: `$${monthlyAmount}`,
+      subtext: '/month'
     };
   };
 
   const getPlanFeatures = (plan) => {
-    const features = [];
-
-    if (plan.brandsLimit === 'unlimited') {
-      features.push('Unlimited brands');
-    } else {
-      features.push(`${plan.brandsLimit} brand${plan.brandsLimit > 1 ? 's' : ''}`);
-    }
-
-    if (plan.promptsLimit === 'unlimited') {
-      features.push('Unlimited prompts');
-    } else {
-      features.push(`${plan.promptsLimit} prompts per month`);
-    }
-
-    if (plan.modelsLimit === 'unlimited') {
-      features.push('All AI models');
-    } else {
-      features.push(`${plan.modelsLimit} AI model${plan.modelsLimit > 1 ? 's' : ''}`);
-    }
-
-    features.push(`${plan.batchFrequency === 'custom' ? 'Custom' : plan.batchFrequency.charAt(0).toUpperCase() + plan.batchFrequency.slice(1)} checks`);
-
-    if (plan.dataRetentionDays === 'unlimited') {
-      features.push('Unlimited data retention');
-    } else {
-      features.push(`${plan.dataRetentionDays} days data retention`);
-    }
-
-    return features;
+    // Features are already built by the backend, just return them
+    return plan.features || [];
   };
 
   const isCurrentPlan = (planId) => {
