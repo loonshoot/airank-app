@@ -606,31 +606,42 @@ export default function BillingPage({ params }) {
     setIsLoading(true);
 
     try {
-      // Fetch plans and billing profile
-      const [plansResult, profileResult] = await Promise.all([
-        executeQuery(graphqlClient, GET_BILLING_PLANS),
-        executeQuery(graphqlClient, GET_BILLING_PROFILES)
-      ]);
+      // Fetch plans
+      const plansResult = await executeQuery(graphqlClient, GET_BILLING_PLANS);
 
       console.log('Billing plans result:', plansResult);
-      console.log('Billing profile result:', profileResult);
 
       if (plansResult.data?.billingPlans) {
         setPlans(plansResult.data.billingPlans);
       }
 
-      if (profileResult.data?.billingProfiles?.[0]) {
-        const profile = profileResult.data.billingProfiles[0];
-        setBillingProfile(profile);
+      // Fetch billing profile for this specific workspace
+      if (workspace.billingProfileId) {
+        const profileResult = await executeQuery(
+          graphqlClient,
+          GET_BILLING_PROFILES,
+          { billingProfileId: workspace.billingProfileId }
+        );
 
-        // Determine current step based on profile state
-        if (profile.hasPaymentMethod || profile.currentPlan !== 'free') {
-          setCurrentStep('manage');
+        console.log('Billing profile result:', profileResult);
+
+        if (profileResult.data?.billingProfiles?.[0]) {
+          const profile = profileResult.data.billingProfiles[0];
+          setBillingProfile(profile);
+
+          // Determine current step based on profile state
+          if (profile.hasPaymentMethod || profile.currentPlan !== 'free') {
+            setCurrentStep('manage');
+          } else {
+            setCurrentStep('plan_selection');
+          }
         } else {
+          console.error('No billing profile found for workspace');
           setCurrentStep('plan_selection');
         }
       } else {
-        console.error('No billing profiles found');
+        console.error('Workspace has no billingProfileId');
+        toast.error('This workspace is not linked to a billing profile');
         setCurrentStep('plan_selection');
       }
     } catch (err) {
