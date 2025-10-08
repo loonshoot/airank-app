@@ -358,42 +358,38 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
           <CardHeader>
             <CardTitle className="text-2xl capitalize">{billingProfile.currentPlan} Plan</CardTitle>
             <CardDescription>
-              {billingProfile.planStatus === 'active' ? (
+              {billingProfile.currentPlan === 'free' || !billingProfile.planStatus ? (
+                <span className="text-gray-600">Free Tier</span>
+              ) : billingProfile.planStatus === 'active' ? (
                 <span className="text-green-600">● Active</span>
+              ) : billingProfile.planStatus === 'incomplete' ? (
+                <span className="text-yellow-600">● Payment Processing</span>
               ) : (
-                <span className="text-gray-600">● {billingProfile.planStatus || 'Free'}</span>
+                <span className="text-gray-600">● {billingProfile.planStatus}</span>
               )}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {currentPlanDetails && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Brands</p>
-                  <p className="text-2xl font-bold">
-                    {billingProfile.brandsLimit === 999999 ? '∞' : billingProfile.brandsLimit}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Prompts/Month</p>
-                  <p className="text-2xl font-bold">
-                    {billingProfile.promptsLimit === 999999 ? '∞' : billingProfile.promptsLimit}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">AI Models</p>
-                  <p className="text-2xl font-bold">
-                    {billingProfile.modelsLimit === 999999 ? '∞' : billingProfile.modelsLimit}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Data Retention</p>
-                  <p className="text-2xl font-bold">
-                    {billingProfile.dataRetentionDays === 999999 ? '∞' : `${billingProfile.dataRetentionDays}d`}
-                  </p>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">Brands</p>
+                <p className="text-2xl font-bold">
+                  {billingProfile.brandsLimit === 999999 ? '∞' : billingProfile.brandsLimit}
+                </p>
               </div>
-            )}
+              <div>
+                <p className="text-sm text-muted-foreground">Prompts/Month</p>
+                <p className="text-2xl font-bold">
+                  {billingProfile.promptsLimit === 999999 ? '∞' : billingProfile.promptsLimit}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">AI Models</p>
+                <p className="text-2xl font-bold">
+                  {billingProfile.modelsLimit === 999999 ? '∞' : billingProfile.modelsLimit}
+                </p>
+              </div>
+            </div>
 
             {billingProfile.currentPlan !== 'free' && (
               <Button
@@ -700,6 +696,11 @@ export default function BillingPage({ params }) {
           setBillingProfile(confirmResult.data.confirmSubscription);
           setCurrentStep('manage');
           toast.success('Welcome to your new plan!');
+
+          // Refresh data after a short delay to get updated Stripe status
+          setTimeout(() => {
+            fetchData();
+          }, 2000);
         }
       }
     } catch (err) {
