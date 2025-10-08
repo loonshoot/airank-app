@@ -27,17 +27,17 @@ const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY 
 const CARD_ELEMENT_OPTIONS = {
   style: {
     base: {
-      color: '#1a1a1a',
+      color: '#ffffff',
       fontFamily: 'system-ui, sans-serif',
       fontSmoothing: 'antialiased',
       fontSize: '16px',
       '::placeholder': {
-        color: '#aab7c4',
+        color: '#71717a',
       },
     },
     invalid: {
-      color: '#ff0099',
-      iconColor: '#ff0099',
+      color: '#ef4444',
+      iconColor: '#ef4444',
     },
   },
 };
@@ -404,7 +404,7 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
           </CardHeader>
           <CardContent>
             {billingProfile.hasPaymentMethod ? (
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border border-border rounded-lg">
                   <div className="flex items-center">
                     <CreditCardIcon className="h-8 w-8 mr-3 text-muted-foreground" />
@@ -422,7 +422,6 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
                 <Button
                   background="Green"
                   border="Light"
-                  className="w-full mt-2"
                   onClick={() => setShowPaymentForm(true)}
                 >
                   Update Card
@@ -434,7 +433,7 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
                   No payment method on file
                 </p>
                 <Button
-                  background="Pink"
+                  background="Green"
                   border="Light"
                   className="w-full"
                   onClick={() => setShowPaymentForm(true)}
