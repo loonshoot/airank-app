@@ -42,7 +42,7 @@ const CARD_ELEMENT_OPTIONS = {
   },
 };
 
-function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
+function PaymentMethodStep({ billingProfile, onSuccess, onBack, isUpdate = false }) {
   const stripe = useStripe();
   const elements = useElements();
   const graphqlClient = useGraphQLClient();
@@ -95,7 +95,7 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
       );
 
       if (saveResult.data?.savePaymentMethod) {
-        toast.success('Payment method added successfully!');
+        toast.success(isUpdate ? 'Payment method updated successfully!' : 'Payment method added successfully!');
         onSuccess(saveResult.data.savePaymentMethod);
       } else if (saveResult.error) {
         toast.error(saveResult.error.message);
@@ -111,9 +111,9 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
   return (
     <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Add Payment Method</CardTitle>
+        <CardTitle>{isUpdate ? 'Update Payment Method' : 'Add Payment Method'}</CardTitle>
         <CardDescription>
-          Enter your card details to complete your subscription setup
+          {isUpdate ? 'Update your card details' : 'Enter your card details to complete your subscription setup'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -130,15 +130,40 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
             </p>
           </div>
 
-          <Button
-            background="Green"
-            border="Light"
-            type="submit"
-            disabled={!stripe || isProcessing}
-            className="w-full"
-          >
-            {isProcessing ? 'Processing...' : 'Add Payment Method'}
-          </Button>
+          {!isUpdate && onBack && (
+            <div className="flex gap-3">
+              <Button
+                background="Green"
+                border="Light"
+                type="button"
+                onClick={onBack}
+                className="flex-1"
+              >
+                Back
+              </Button>
+              <Button
+                background="Green"
+                border="Light"
+                type="submit"
+                disabled={!stripe || isProcessing}
+                className="flex-1"
+              >
+                {isProcessing ? 'Processing...' : 'Add Payment Method'}
+              </Button>
+            </div>
+          )}
+
+          {isUpdate && (
+            <Button
+              background="Green"
+              border="Light"
+              type="submit"
+              disabled={!stripe || isProcessing}
+              className="w-full"
+            >
+              {isProcessing ? 'Processing...' : 'Update Card'}
+            </Button>
+          )}
         </form>
       </CardContent>
     </Card>
@@ -522,6 +547,7 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
                 billingProfile={billingProfile}
                 onSuccess={handlePaymentMethodAdded}
                 onBack={() => setShowPaymentForm(false)}
+                isUpdate={true}
               />
             </Elements>
           </div>
