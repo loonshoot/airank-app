@@ -159,35 +159,45 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack }) {
 function PlanSelectionStep({ plans, billingProfile, selectedInterval, onIntervalChange, onPlanSelect }) {
   const getPlanPrice = (plan) => {
     if (plan.isFree || plan.id === 'free') {
-      return { display: '$0', subtext: 'forever' };
-    }
-
-    if (plan.isEnterprise || plan.id === 'enterprise') {
-      return { display: 'Custom', subtext: 'contact sales' };
-    }
-
-    // Use price (monthly) or annualPrice
-    if (selectedInterval === 'annual' && plan.annualPrice) {
-      // annualPrice is already formatted like "$290"
-      const annualAmount = parseInt(plan.annualPrice.replace(/[^0-9]/g, ''));
-      const monthly = (annualAmount / 12).toFixed(0);
       return {
-        display: `$${monthly}`,
-        subtext: '/month (billed annually)'
+        display: '$0',
+        subtext: '/month',
+        annualSubtext: null
+      };
+    }
+    if (plan.isEnterprise || plan.id === 'enterprise') {
+      return {
+        display: '$1,000+',
+        subtext: '',
+        annualSubtext: 'Setup fee: $2,500 (waived annual)'
       };
     }
 
-    // Use costPerMonth or parse from price
+    // Get monthly price
     const monthlyAmount = plan.costPerMonth || parseInt((plan.price || '$0').replace(/[^0-9]/g, ''));
+
+    // Calculate annual savings if available
+    let annualSubtext = null;
+    if (plan.annualPrice) {
+      const annualAmount = parseInt(plan.annualPrice.replace(/[^0-9]/g, ''));
+      annualSubtext = `$${annualAmount.toLocaleString()}/year (save 2 months)`;
+    }
+
     return {
       display: `$${monthlyAmount}`,
-      subtext: '/month'
+      subtext: '/month',
+      annualSubtext
     };
   };
 
   const getPlanFeatures = (plan) => {
-    // Features are already built by the backend, just return them
     return plan.features || [];
+  };
+
+  const getPlanDescription = (plan) => {
+    if (plan.target) return plan.target;
+    if (plan.id === 'free') return 'Perfect for trying out AI Rank';
+    return '';
   };
 
   const isCurrentPlan = (planId) => {
@@ -224,75 +234,76 @@ function PlanSelectionStep({ plans, billingProfile, selectedInterval, onInterval
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         {plans.map((plan) => {
           const price = getPlanPrice(plan);
           const features = getPlanFeatures(plan);
+          const description = getPlanDescription(plan);
           const isCurrent = isCurrentPlan(plan.id);
-          const isPopular = plan.id === 'small';
+          const isPopular = plan.isPopular || plan.id === 'medium';
 
           return (
-            <Card
+            <div
               key={plan.id}
-              className={`relative flex flex-col ${
-                isPopular ? 'border-primary shadow-lg scale-105' : ''
+              className={`relative flex flex-col rounded-2xl p-8 ${
+                isPopular
+                  ? 'bg-gradient-to-b from-green-600/10 to-zinc-900/50 border-2 border-green-600/50'
+                  : 'bg-zinc-900/50 border border-zinc-800'
               }`}
             >
               {isPopular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
-                    MOST POPULAR
-                  </span>
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-1 bg-green-600 text-black text-sm font-semibold rounded-full">
+                  POPULAR
                 </div>
               )}
 
-              <CardHeader>
-                <CardTitle className="text-2xl">{plan.name}</CardTitle>
-                <CardDescription className="min-h-[40px]">
-                  {plan.description}
-                </CardDescription>
-              </CardHeader>
-
-              <CardContent className="flex-1">
-                <div className="mb-6">
-                  <div className="flex items-baseline">
-                    <span className="text-4xl font-bold">{price.display}</span>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{price.subtext}</p>
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                <div className="flex items-baseline gap-2 mb-1">
+                  <span className="text-4xl font-bold">{price.display}</span>
+                  {price.subtext && <span className="text-gray-400">{price.subtext}</span>}
                 </div>
-
-                <ul className="space-y-3">
-                  {features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <CheckIcon className="h-5 w-5 text-green-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-
-              <CardFooter>
-                {isCurrent ? (
-                  <Button
-                    background="Pink"
-                    border="Light"
-                    className="w-full"
-                    disabled
-                  >
-                    Current Plan
-                  </Button>
-                ) : (
-                  <Button
-                    background={isPopular ? 'Pink' : 'Green'}
-                    border="Light"
-                    className="w-full"
-                    onClick={() => onPlanSelect(plan)}
-                  >
-                    {plan.id === 'free' ? 'Select' : plan.id === 'enterprise' ? 'Contact Sales' : 'Subscribe'}
-                  </Button>
+                {price.annualSubtext && (
+                  <p className="text-sm text-green-600 mb-2">{price.annualSubtext}</p>
                 )}
-              </CardFooter>
-            </Card>
+                {description && (
+                  <p className="text-gray-400 text-sm">{description}</p>
+                )}
+              </div>
+
+              <ul className="space-y-3 mb-8 flex-grow">
+                {features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-2">
+                    <svg className="w-5 h-5 text-green-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
+                    </svg>
+                    <span className="text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {isCurrent ? (
+                <button
+                  disabled
+                  className="w-full py-3 bg-zinc-800 text-white rounded-lg font-medium opacity-50 cursor-not-allowed text-center"
+                >
+                  Current Plan
+                </button>
+              ) : (
+                <button
+                  onClick={() => onPlanSelect(plan)}
+                  className={`w-full py-3 rounded-lg font-medium transition-colors text-center ${
+                    isPopular
+                      ? 'bg-green-600 text-black hover:bg-green-600/90'
+                      : plan.id === 'enterprise'
+                      ? 'bg-white text-black hover:bg-gray-200'
+                      : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                  }`}
+                >
+                  {plan.id === 'free' ? 'Get Started' : plan.id === 'enterprise' ? 'Contact Sales' : 'Get Started'}
+                </button>
+              )}
+            </div>
           );
         })}
       </div>
@@ -589,6 +600,9 @@ export default function BillingPage({ params }) {
         executeQuery(graphqlClient, GET_BILLING_PROFILES)
       ]);
 
+      console.log('Billing plans result:', plansResult);
+      console.log('Billing profile result:', profileResult);
+
       if (plansResult.data?.billingPlans) {
         setPlans(plansResult.data.billingPlans);
       }
@@ -603,6 +617,9 @@ export default function BillingPage({ params }) {
         } else {
           setCurrentStep('plan_selection');
         }
+      } else {
+        console.error('No billing profiles found');
+        setCurrentStep('plan_selection');
       }
     } catch (err) {
       console.error('Error fetching data:', err);
