@@ -143,34 +143,39 @@ const Actions = ({ routerType }) => {
       
       {/* Create workspace modal */}
       <Modal show={showModal} title={t("workspace.action.create.title")} toggle={toggleModal}>
-        <div className="space-y-0 text-sm text-gray-600">
+        <div className="space-y-2 text-sm text-gray-400">
           <p>
             {t("workspace.action.create.description.lineOne")}
           </p>
           <p>{t("workspace.action.create.description.lineTwo")}</p>
         </div>
-        <div className="space-y-1">
-          <h3 className="text-xl font-bold">{t("workspace.action.name.label")}</h3>
-          <p className="text-sm text-light">
-            {t("workspace.suggesion.label")}
-          </p>
-          <input
-            className="w-full px-3 py-2 bg-light border-2 border-dark"
-            disabled={isSubmitting}
-            onChange={handleNameChange}
-            type="text"
-            value={name}
-          />
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm font-medium text-white mb-2">
+              {t("workspace.action.name.label")}
+            </label>
+            <p className="text-xs text-gray-400 mb-2">
+              {t("workspace.suggesion.label")}
+            </p>
+            <input
+              className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-600 focus:border-transparent"
+              disabled={isSubmitting}
+              onChange={handleNameChange}
+              type="text"
+              value={name}
+              placeholder="Enter workspace name"
+            />
+          </div>
         </div>
-        <div className="flex flex-col items-stretch">
+        <div className="flex flex-col items-stretch pt-2">
           <Button
-            background="Pink"
-            border="Dark"
+            background="Green"
+            border="Light"
             width="Full"
             disabled={!validName || isSubmitting}
             onClick={createWorkspace}
           >
-            <span>{t('workspace.action.button.label')}</span>
+            <span>{isSubmitting ? 'Creating...' : t('workspace.action.button.label')}</span>
           </Button>
         </div>
       </Modal>
