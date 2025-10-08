@@ -111,9 +111,9 @@ const Actions = ({ routerType }) => {
 
   const handleWorkspaceChange = (workspace) => {
     setWorkspace(workspace);
-    
+
     // Always redirect to the workspace page when selection changes
-    if (workspace && workspace.slug) {
+    if (workspace && workspace.slug && router) {
       router.push(`/${workspace.slug}`);
     }
   };
