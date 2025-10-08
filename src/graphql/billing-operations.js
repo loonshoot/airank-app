@@ -26,13 +26,10 @@ export const GET_BILLING_PROFILES = gql`
       modelsLimit
       dataRetentionDays
       hasPaymentMethod
-      defaultPaymentMethodId
       paymentMethodLast4
       paymentMethodBrand
       paymentMethodExpMonth
       paymentMethodExpYear
-      createdAt
-      updatedAt
       members {
         userId
         role
@@ -87,7 +84,6 @@ export const CREATE_BILLING_PROFILE = gql`
       brandsLimit
       promptsLimit
       modelsLimit
-      createdAt
     }
   }
 `;
@@ -199,7 +195,6 @@ export const SAVE_PAYMENT_METHOD = gql`
     ) {
       _id
       hasPaymentMethod
-      defaultPaymentMethodId
       paymentMethodLast4
       paymentMethodBrand
       paymentMethodExpMonth
