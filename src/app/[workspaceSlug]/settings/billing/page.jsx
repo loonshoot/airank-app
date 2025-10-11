@@ -588,6 +588,135 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
   );
 }
 
+function AdvancedBillingSelector({
+  workspace,
+  availableProfiles,
+  currentProfile,
+  onAttachProfile,
+  onCreateProfile,
+  isLoading
+}) {
+  const [selectedProfileId, setSelectedProfileId] = useState(workspace?.billingProfileId || '');
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newProfileName, setNewProfileName] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+
+  const handleAttach = async () => {
+    if (selectedProfileId && selectedProfileId !== workspace?.billingProfileId) {
+      await onAttachProfile(selectedProfileId);
+    }
+  };
+
+  const handleCreate = async () => {
+    if (!newProfileName.trim()) {
+      toast.error('Please enter a billing profile name');
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      await onCreateProfile(newProfileName);
+      setShowCreateModal(false);
+      setNewProfileName('');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardHeader>
+          <CardTitle>Billing Profile</CardTitle>
+          <CardDescription>
+            Select which billing profile to use for this workspace
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-3">
+            <select
+              value={selectedProfileId}
+              onChange={(e) => setSelectedProfileId(e.target.value)}
+              className="flex-1 px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-600"
+              disabled={isLoading}
+            >
+              {availableProfiles?.map((profile) => {
+                const isDefault = profile._id === workspace?.defaultBillingProfileId;
+                return (
+                  <option key={profile._id} value={profile._id}>
+                    {profile.name} {isDefault ? '(Default)' : ''} - {profile.currentPlan}
+                  </option>
+                );
+              })}
+            </select>
+
+            <Button
+              background="Green"
+              border="Light"
+              onClick={handleAttach}
+              disabled={isLoading || selectedProfileId === workspace?.billingProfileId}
+            >
+              {isLoading ? 'Attaching...' : 'Attach'}
+            </Button>
+          </div>
+
+          <Button
+            background="Green"
+            border="Light"
+            width="Full"
+            onClick={() => setShowCreateModal(true)}
+            disabled={isLoading}
+          >
+            + Create New Billing Profile
+          </Button>
+
+          {showCreateModal && (
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+              <div className="bg-[#0a0a0a] border border-zinc-800 rounded-lg p-6 max-w-md w-full mx-4">
+                <h3 className="text-xl font-bold mb-4">Create Billing Profile</h3>
+                <p className="text-sm text-gray-400 mb-4">
+                  Create a new billing profile that starts on the free tier. You can share this profile across multiple workspaces.
+                </p>
+                <input
+                  type="text"
+                  value={newProfileName}
+                  onChange={(e) => setNewProfileName(e.target.value)}
+                  placeholder="Enter billing profile name"
+                  className="w-full px-4 py-2 bg-zinc-900 border border-zinc-800 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-600 mb-4"
+                  disabled={isCreating}
+                />
+                <div className="flex gap-3">
+                  <Button
+                    background="Green"
+                    border="Light"
+                    onClick={() => {
+                      setShowCreateModal(false);
+                      setNewProfileName('');
+                    }}
+                    disabled={isCreating}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    background="Green"
+                    border="Light"
+                    onClick={handleCreate}
+                    disabled={isCreating}
+                    className="flex-1"
+                  >
+                    {isCreating ? 'Creating...' : 'Create'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function BillingModeToggle({ workspaceSlug, isAdvanced, onToggle, isLoading }) {
   return (
     <div className="mt-12 pt-8 border-t border-zinc-800">
@@ -646,6 +775,8 @@ export default function BillingPage({ params }) {
   const [selectedInterval, setSelectedInterval] = useState('monthly');
   const [billingConfig, setBillingConfig] = useState(null);
   const [isTogglingMode, setIsTogglingMode] = useState(false);
+  const [availableProfiles, setAvailableProfiles] = useState([]);
+  const [isAttaching, setIsAttaching] = useState(false);
 
   const fetchData = async () => {
     if (!workspace?._id) return;
@@ -702,6 +833,16 @@ export default function BillingPage({ params }) {
       if (configResult.data?.configs) {
         const config = configResult.data.configs.find(c => c.configType === 'billing');
         setBillingConfig(config || { configType: 'billing', data: { advancedBilling: false } });
+      }
+
+      // Fetch all available billing profiles for user (for advanced mode)
+      const allProfilesResult = await executeQuery(
+        graphqlClient,
+        GET_BILLING_PROFILES
+      );
+
+      if (allProfilesResult.data?.billingProfiles) {
+        setAvailableProfiles(allProfilesResult.data.billingProfiles);
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -821,6 +962,61 @@ export default function BillingPage({ params }) {
     }
   };
 
+  const handleAttachProfile = async (billingProfileId) => {
+    setIsAttaching(true);
+
+    try {
+      const result = await executeMutation(
+        graphqlClient,
+        ATTACH_BILLING_PROFILE,
+        {
+          workspaceId: workspace._id,
+          billingProfileId
+        }
+      );
+
+      if (result.data?.attachBillingProfile) {
+        toast.success('Billing profile attached successfully');
+
+        // Refresh data to get updated billing profile
+        setTimeout(() => {
+          fetchData();
+        }, 500);
+      }
+    } catch (err) {
+      console.error('Error attaching billing profile:', err);
+      toast.error(err.message || 'Failed to attach billing profile');
+    } finally {
+      setIsAttaching(false);
+    }
+  };
+
+  const handleCreateProfile = async (name) => {
+    try {
+      const result = await executeMutation(
+        graphqlClient,
+        CREATE_BILLING_PROFILE,
+        {
+          name,
+          workspaceId: workspace._id
+        }
+      );
+
+      if (result.data?.createBillingProfile) {
+        toast.success('Billing profile created successfully');
+
+        // Refresh data to get updated list of profiles
+        setTimeout(() => {
+          fetchData();
+        }, 500);
+      }
+    } catch (err) {
+      console.error('Error creating billing profile:', err);
+      toast.error(err.message || 'Failed to create billing profile');
+      throw err;
+    }
+  };
+
   if (isLoading || currentStep === 'loading') {
     return (
       <AccountLayout routerType="app">
@@ -866,6 +1062,16 @@ export default function BillingPage({ params }) {
               onIntervalChange={setSelectedInterval}
               onPlanSelect={handlePlanSelect}
             />
+            {billingConfig?.data?.advancedBilling && (
+              <AdvancedBillingSelector
+                workspace={workspace}
+                availableProfiles={availableProfiles}
+                currentProfile={billingProfile}
+                onAttachProfile={handleAttachProfile}
+                onCreateProfile={handleCreateProfile}
+                isLoading={isAttaching}
+              />
+            )}
             <BillingModeToggle
               workspaceSlug={workspaceSlug}
               isAdvanced={billingConfig?.data?.advancedBilling || false}
@@ -943,6 +1149,16 @@ export default function BillingPage({ params }) {
               plans={plans}
               onRefetch={fetchData}
             />
+            {billingConfig?.data?.advancedBilling && (
+              <AdvancedBillingSelector
+                workspace={workspace}
+                availableProfiles={availableProfiles}
+                currentProfile={billingProfile}
+                onAttachProfile={handleAttachProfile}
+                onCreateProfile={handleCreateProfile}
+                isLoading={isAttaching}
+              />
+            )}
             <BillingModeToggle
               workspaceSlug={workspaceSlug}
               isAdvanced={billingConfig?.data?.advancedBilling || false}
