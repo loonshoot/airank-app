@@ -11,6 +11,10 @@ export const GET_USER_WORKSPACES = gql`
       inviteCode
       creatorId
       billingProfileId
+      defaultBillingProfileId
+      config {
+        advancedBilling
+      }
       createdAt
       updatedAt
       chargebeeSubscriptionId

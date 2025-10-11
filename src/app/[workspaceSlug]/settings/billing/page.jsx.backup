@@ -13,11 +13,7 @@ import {
   CREATE_SUBSCRIPTION,
   CONFIRM_SUBSCRIPTION,
   CREATE_SETUP_INTENT,
-  SAVE_PAYMENT_METHOD,
-  GET_WORKSPACE_CONFIGS,
-  UPDATE_WORKSPACE_CONFIG,
-  ATTACH_BILLING_PROFILE,
-  CREATE_BILLING_PROFILE
+  SAVE_PAYMENT_METHOD
 } from '@/graphql/billing-operations';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Button from '@/components/Button/index';
@@ -113,11 +109,11 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack, isUpdate = false
   };
 
   return (
-    <Card className="w-full">
+    <Card className="max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>{isUpdate ? 'Update Payment Method' : 'Select Payment Method'}</CardTitle>
+        <CardTitle>{isUpdate ? 'Update Payment Method' : 'Add Payment Method'}</CardTitle>
         <CardDescription>
-          {isUpdate ? 'Update your card details' : 'Choose your preferred payment method'}
+          {isUpdate ? 'Update your card details' : 'Enter your card details to complete your subscription setup'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -152,7 +148,7 @@ function PaymentMethodStep({ billingProfile, onSuccess, onBack, isUpdate = false
                 disabled={!stripe || isProcessing}
                 className="flex-1"
               >
-                {isProcessing ? 'Processing...' : 'Subscribe'}
+                {isProcessing ? 'Processing...' : 'Add Payment Method'}
               </Button>
             </div>
           ) : (
@@ -337,7 +333,7 @@ function PlanSelectionStep({ plans, billingProfile, selectedInterval, onInterval
 function ManageBillingView({ billingProfile, plans, onRefetch }) {
   const graphqlClient = useGraphQLClient();
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [selectedInterval, setSelectedInterval] = useState('monthly');
+  const [selectedInterval, setSelectedInterval] = useState('annual');
   const [isChangingPlan, setIsChangingPlan] = useState(false);
 
   const currentPlanDetails = plans.find(p => p.id === billingProfile.currentPlan);
@@ -588,50 +584,6 @@ function ManageBillingView({ billingProfile, plans, onRefetch }) {
   );
 }
 
-function BillingModeToggle({ workspaceSlug, isAdvanced, onToggle, isLoading }) {
-  return (
-    <div className="mt-12 pt-8 border-t border-zinc-800">
-      <div className="bg-zinc-900/30 rounded-lg p-6">
-        {!isAdvanced ? (
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Complex billing needs?</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Switch to advanced billing to manage multiple billing profiles, share billing across workspaces, and gain more control over your subscription management.
-              </p>
-            </div>
-            <Button
-              background="Green"
-              border="Light"
-              onClick={onToggle}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Switching...' : 'Change to Advanced Billing'}
-            </Button>
-          </div>
-        ) : (
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-lg font-semibold mb-2">Looking a bit complex?</h3>
-              <p className="text-sm text-gray-400 mb-4">
-                Switch to simple billing to use your workspace's default billing profile. This will revert any advanced billing configurations.
-              </p>
-            </div>
-            <Button
-              background="Green"
-              border="Light"
-              onClick={onToggle}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Switching...' : 'Switch to Simple Billing'}
-            </Button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function BillingPage({ params }) {
   const resolvedParams = use(params);
   const { workspaceSlug } = resolvedParams || {};
@@ -643,9 +595,7 @@ export default function BillingPage({ params }) {
   const [isLoading, setIsLoading] = useState(true);
   const [currentStep, setCurrentStep] = useState('loading'); // loading, plan_selection, add_payment, manage
   const [selectedPlan, setSelectedPlan] = useState(null);
-  const [selectedInterval, setSelectedInterval] = useState('monthly');
-  const [billingConfig, setBillingConfig] = useState(null);
-  const [isTogglingMode, setIsTogglingMode] = useState(false);
+  const [selectedInterval, setSelectedInterval] = useState('annual');
 
   const fetchData = async () => {
     if (!workspace?._id) return;
@@ -690,18 +640,6 @@ export default function BillingPage({ params }) {
         console.error('Workspace has no billingProfileId');
         toast.error('This workspace is not linked to a billing profile');
         setCurrentStep('plan_selection');
-      }
-
-      // Fetch workspace billing config
-      const configResult = await executeQuery(
-        graphqlClient,
-        GET_WORKSPACE_CONFIGS,
-        { workspaceSlug }
-      );
-
-      if (configResult.data?.configs) {
-        const config = configResult.data.configs.find(c => c.configType === 'billing');
-        setBillingConfig(config || { configType: 'billing', data: { advancedBilling: false } });
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -772,55 +710,6 @@ export default function BillingPage({ params }) {
     }
   };
 
-  const handleToggleBillingMode = async () => {
-    const currentMode = billingConfig?.data?.advancedBilling || false;
-    const newMode = !currentMode;
-
-    // If switching from advanced to simple and not on default profile, show warning
-    if (currentMode && !newMode && workspace.billingProfileId !== workspace.defaultBillingProfileId) {
-      const confirmed = window.confirm(
-        'Switching to simple billing will revert to your workspace\'s default billing profile. ' +
-        'Any billing attached to your current profile will not automatically cancel during the change. ' +
-        'If you intend to swap to a shared billing profile, you should downgrade to the free plan first, then change to avoid being billed twice.\n\n' +
-        'Do you want to continue?'
-      );
-
-      if (!confirmed) return;
-    }
-
-    setIsTogglingMode(true);
-
-    try {
-      const result = await executeMutation(
-        graphqlClient,
-        UPDATE_WORKSPACE_CONFIG,
-        {
-          workspaceSlug,
-          configs: [{
-            configType: 'billing',
-            data: { advancedBilling: newMode }
-          }]
-        }
-      );
-
-      if (result.data?.updateWorkspaceConfigs) {
-        const updatedConfig = result.data.updateWorkspaceConfigs.find(c => c.configType === 'billing');
-        setBillingConfig(updatedConfig);
-        toast.success(`Switched to ${newMode ? 'advanced' : 'simple'} billing mode`);
-
-        // Refresh data to get updated billing profile if needed
-        setTimeout(() => {
-          fetchData();
-        }, 500);
-      }
-    } catch (err) {
-      console.error('Error toggling billing mode:', err);
-      toast.error('Failed to update billing mode');
-    } finally {
-      setIsTogglingMode(false);
-    }
-  };
-
   if (isLoading || currentStep === 'loading') {
     return (
       <AccountLayout routerType="app">
@@ -846,8 +735,8 @@ export default function BillingPage({ params }) {
     <AccountLayout routerType="app">
       <Meta title="Billing & Subscription" />
       <Content.Title
-        title={currentStep === 'add_payment' ? "Confirm Your Subscription" : "Billing & Subscription"}
-        subtitle={currentStep === 'add_payment' ? "Review your plan details and add payment method" : "Manage your plan and payment"}
+        title="Billing & Subscription"
+        subtitle="Manage your plan and payment"
       />
       <Content.Divider />
       <Content.Container>
@@ -866,19 +755,21 @@ export default function BillingPage({ params }) {
               onIntervalChange={setSelectedInterval}
               onPlanSelect={handlePlanSelect}
             />
-            <BillingModeToggle
-              workspaceSlug={workspaceSlug}
-              isAdvanced={billingConfig?.data?.advancedBilling || false}
-              onToggle={handleToggleBillingMode}
-              isLoading={isTogglingMode}
-            />
           </div>
         )}
 
         {currentStep === 'add_payment' && selectedPlan && (
           <div>
-            {/* Plan Confirmation Card */}
-            <div className="w-full mb-8 bg-zinc-900/50 border border-zinc-800 rounded-lg p-6">
+            <div className="mb-6 text-center">
+              <h3 className="text-xl font-semibold mb-2">
+                Confirm Your Subscription
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Review your plan details and add payment method
+              </p>
+
+              {/* Plan Confirmation Card */}
+              <div className="max-w-md mx-auto mb-8 bg-zinc-900/50 border border-zinc-800 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-left">
                     <p className="text-sm text-gray-400">Selected Plan</p>
@@ -925,6 +816,7 @@ export default function BillingPage({ params }) {
                     </p>
                   )}
                 </div>
+              </div>
             </div>
             <Elements stripe={stripePromise}>
               <PaymentMethodStep
@@ -937,19 +829,11 @@ export default function BillingPage({ params }) {
         )}
 
         {currentStep === 'manage' && billingProfile && (
-          <div>
-            <ManageBillingView
-              billingProfile={billingProfile}
-              plans={plans}
-              onRefetch={fetchData}
-            />
-            <BillingModeToggle
-              workspaceSlug={workspaceSlug}
-              isAdvanced={billingConfig?.data?.advancedBilling || false}
-              onToggle={handleToggleBillingMode}
-              isLoading={isTogglingMode}
-            />
-          </div>
+          <ManageBillingView
+            billingProfile={billingProfile}
+            plans={plans}
+            onRefetch={fetchData}
+          />
         )}
       </Content.Container>
     </AccountLayout>

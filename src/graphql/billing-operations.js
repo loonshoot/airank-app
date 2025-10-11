@@ -202,3 +202,39 @@ export const SAVE_PAYMENT_METHOD = gql`
     }
   }
 `;
+
+/**
+ * Update workspace config (including billing mode)
+ */
+export const UPDATE_WORKSPACE_CONFIG = gql`
+  mutation UpdateWorkspaceConfig(
+    $workspaceSlug: String!
+    $configs: JSON!
+  ) {
+    updateWorkspaceConfigs(
+      workspaceSlug: $workspaceSlug
+      configs: $configs
+    ) {
+      _id
+      configType
+      data
+      method
+      updatedAt
+    }
+  }
+`;
+
+/**
+ * Get workspace configs
+ */
+export const GET_WORKSPACE_CONFIGS = gql`
+  query GetWorkspaceConfigs($workspaceSlug: String!) {
+    configs(workspaceSlug: $workspaceSlug) {
+      _id
+      configType
+      data
+      method
+      updatedAt
+    }
+  }
+`;
