@@ -8,8 +8,8 @@ import { gql } from '@apollo/client';
  * Get billing profiles for the authenticated user
  */
 export const GET_BILLING_PROFILES = gql`
-  query GetBillingProfiles($billingProfileId: ID) {
-    billingProfiles(billingProfileId: $billingProfileId) {
+  query GetBillingProfiles($billingProfileId: ID, $workspaceId: ID) {
+    billingProfiles(billingProfileId: $billingProfileId, workspaceId: $workspaceId) {
       _id
       name
       stripeCustomerId
@@ -31,8 +31,17 @@ export const GET_BILLING_PROFILES = gql`
       paymentMethodExpMonth
       paymentMethodExpYear
       members {
+        _id
         userId
+        email
         role
+        permissions {
+          attach
+          modify
+          delete
+        }
+        addedBy
+        createdAt
       }
     }
   }
@@ -236,5 +245,83 @@ export const GET_WORKSPACE_CONFIGS = gql`
       method
       updatedAt
     }
+  }
+`;
+
+/**
+ * Add a member to a billing profile
+ */
+export const ADD_BILLING_PROFILE_MEMBER = gql`
+  mutation AddBillingProfileMember(
+    $billingProfileId: ID!
+    $email: String!
+    $permissions: BillingProfilePermissionsInput!
+  ) {
+    addBillingProfileMember(
+      billingProfileId: $billingProfileId
+      email: $email
+      permissions: $permissions
+    ) {
+      _id
+      userId
+      role
+      permissions {
+        attach
+        modify
+        delete
+      }
+      addedBy
+      createdAt
+    }
+  }
+`;
+
+/**
+ * Update a billing profile member's permissions
+ */
+export const UPDATE_BILLING_PROFILE_MEMBER = gql`
+  mutation UpdateBillingProfileMember(
+    $billingProfileId: ID!
+    $userId: ID!
+    $permissions: BillingProfilePermissionsInput!
+  ) {
+    updateBillingProfileMember(
+      billingProfileId: $billingProfileId
+      userId: $userId
+      permissions: $permissions
+    ) {
+      _id
+      userId
+      role
+      permissions {
+        attach
+        modify
+        delete
+      }
+    }
+  }
+`;
+
+/**
+ * Remove a member from a billing profile
+ */
+export const REMOVE_BILLING_PROFILE_MEMBER = gql`
+  mutation RemoveBillingProfileMember(
+    $billingProfileId: ID!
+    $userId: ID!
+  ) {
+    removeBillingProfileMember(
+      billingProfileId: $billingProfileId
+      userId: $userId
+    )
+  }
+`;
+
+/**
+ * Delete a billing profile
+ */
+export const DELETE_BILLING_PROFILE = gql`
+  mutation DeleteBillingProfile($billingProfileId: ID!) {
+    deleteBillingProfile(billingProfileId: $billingProfileId)
   }
 `;

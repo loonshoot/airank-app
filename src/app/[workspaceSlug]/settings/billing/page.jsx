@@ -6,7 +6,7 @@ import { useGraphQLClient } from '@/hooks/data/index';
 import { AccountLayout } from '@/layouts/index';
 import Meta from '@/components/Meta/index';
 import Content from '@/components/Content/index';
-import { executeQuery, executeMutation } from '@/graphql/operations';
+import { executeQuery, executeMutation, GET_USER_WORKSPACES } from '@/graphql/operations';
 import {
   GET_BILLING_PROFILES,
   GET_BILLING_PLANS,
@@ -764,7 +764,7 @@ function BillingModeToggle({ workspaceSlug, isAdvanced, onToggle, isLoading }) {
 export default function BillingPage({ params }) {
   const resolvedParams = use(params);
   const { workspaceSlug } = resolvedParams || {};
-  const { workspace } = useWorkspace();
+  const { workspace, setWorkspace } = useWorkspace();
   const graphqlClient = useGraphQLClient();
 
   const [plans, setPlans] = useState([]);
@@ -777,13 +777,29 @@ export default function BillingPage({ params }) {
   const [isTogglingMode, setIsTogglingMode] = useState(false);
   const [availableProfiles, setAvailableProfiles] = useState([]);
   const [isAttaching, setIsAttaching] = useState(false);
+  const [showBillingWarning, setShowBillingWarning] = useState(false);
 
   const fetchData = async () => {
-    if (!workspace?._id) return;
+    if (!workspaceSlug) return;
 
     setIsLoading(true);
 
     try {
+      // Refetch workspace data first to get updated billing profile IDs
+      const workspaceResult = await executeQuery(
+        graphqlClient,
+        GET_USER_WORKSPACES,
+        { workspaceSlug },
+        { fetchPolicy: 'network-only' }
+      );
+
+      let updatedWorkspace = workspace;
+      if (workspaceResult.data?.workspace) {
+        updatedWorkspace = workspaceResult.data.workspace;
+        setWorkspace(updatedWorkspace);
+        console.log('Updated workspace data:', updatedWorkspace);
+      }
+
       // Fetch plans
       const plansResult = await executeQuery(graphqlClient, GET_BILLING_PLANS);
 
@@ -794,11 +810,12 @@ export default function BillingPage({ params }) {
       }
 
       // Fetch billing profile for this specific workspace
-      if (workspace.billingProfileId) {
+      if (updatedWorkspace?.billingProfileId) {
         const profileResult = await executeQuery(
           graphqlClient,
           GET_BILLING_PROFILES,
-          { billingProfileId: workspace.billingProfileId }
+          { billingProfileId: updatedWorkspace.billingProfileId },
+          { fetchPolicy: 'network-only' }
         );
 
         console.log('Billing profile result:', profileResult);
@@ -832,13 +849,17 @@ export default function BillingPage({ params }) {
 
       if (configResult.data?.configs) {
         const config = configResult.data.configs.find(c => c.configType === 'billing');
-        setBillingConfig(config || { configType: 'billing', data: { advancedBilling: false } });
+        const finalConfig = config || { configType: 'billing', data: { advancedBilling: false } };
+        console.log('Setting billing config:', finalConfig);
+        setBillingConfig(finalConfig);
       }
 
       // Fetch all available billing profiles for user (for advanced mode)
+      // Pass workspaceId to filter default profiles to only the current workspace
       const allProfilesResult = await executeQuery(
         graphqlClient,
-        GET_BILLING_PROFILES
+        GET_BILLING_PROFILES,
+        { workspaceId: updatedWorkspace._id }
       );
 
       if (allProfilesResult.data?.billingProfiles) {
@@ -919,17 +940,17 @@ export default function BillingPage({ params }) {
 
     // If switching from advanced to simple and not on default profile, show warning
     if (currentMode && !newMode && workspace.billingProfileId !== workspace.defaultBillingProfileId) {
-      const confirmed = window.confirm(
-        'Switching to simple billing will revert to your workspace\'s default billing profile. ' +
-        'Any billing attached to your current profile will not automatically cancel during the change. ' +
-        'If you intend to swap to a shared billing profile, you should downgrade to the free plan first, then change to avoid being billed twice.\n\n' +
-        'Do you want to continue?'
-      );
-
-      if (!confirmed) return;
+      setShowBillingWarning(true);
+      return;
     }
 
+    // Proceed with toggle
+    await performBillingModeToggle(newMode);
+  };
+
+  const performBillingModeToggle = async (newMode) => {
     setIsTogglingMode(true);
+    setCurrentStep('loading');
 
     try {
       const result = await executeMutation(
@@ -949,14 +970,14 @@ export default function BillingPage({ params }) {
         setBillingConfig(updatedConfig);
         toast.success(`Switched to ${newMode ? 'advanced' : 'simple'} billing mode`);
 
-        // Refresh data to get updated billing profile if needed
-        setTimeout(() => {
-          fetchData();
-        }, 500);
+        // Refresh data to get updated billing profile
+        await fetchData();
       }
     } catch (err) {
       console.error('Error toggling billing mode:', err);
       toast.error('Failed to update billing mode');
+      // Restore previous step on error
+      setCurrentStep('manage');
     } finally {
       setIsTogglingMode(false);
     }
@@ -964,6 +985,7 @@ export default function BillingPage({ params }) {
 
   const handleAttachProfile = async (billingProfileId) => {
     setIsAttaching(true);
+    setCurrentStep('loading');
 
     try {
       const result = await executeMutation(
@@ -979,13 +1001,13 @@ export default function BillingPage({ params }) {
         toast.success('Billing profile attached successfully');
 
         // Refresh data to get updated billing profile
-        setTimeout(() => {
-          fetchData();
-        }, 500);
+        await fetchData();
       }
     } catch (err) {
       console.error('Error attaching billing profile:', err);
       toast.error(err.message || 'Failed to attach billing profile');
+      // Restore previous step on error
+      setCurrentStep('manage');
     } finally {
       setIsAttaching(false);
     }
@@ -1149,15 +1171,37 @@ export default function BillingPage({ params }) {
               plans={plans}
               onRefetch={fetchData}
             />
+            {console.log('🔍 CHECK: currentStep:', currentStep, 'billingConfig:', billingConfig, 'advancedBilling:', billingConfig?.data?.advancedBilling)}
             {billingConfig?.data?.advancedBilling && (
-              <AdvancedBillingSelector
-                workspace={workspace}
-                availableProfiles={availableProfiles}
-                currentProfile={billingProfile}
-                onAttachProfile={handleAttachProfile}
-                onCreateProfile={handleCreateProfile}
-                isLoading={isAttaching}
-              />
+              <>
+                {/* Billing Profile Members Card */}
+                <Card className="bg-zinc-900/50 border-zinc-800 mt-8">
+                  <CardHeader>
+                    <CardTitle>Billing Profile Members</CardTitle>
+                    <CardDescription>
+                      {billingProfile.members?.length || 0} {billingProfile.members?.length === 1 ? 'user has' : 'users have'} access to this billing profile
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Button
+                      background="Green"
+                      border="Light"
+                      onClick={() => window.location.href = `/${workspaceSlug}/settings/billing-profiles`}
+                    >
+                      Manage Profile Members
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <AdvancedBillingSelector
+                  workspace={workspace}
+                  availableProfiles={availableProfiles}
+                  currentProfile={billingProfile}
+                  onAttachProfile={handleAttachProfile}
+                  onCreateProfile={handleCreateProfile}
+                  isLoading={isAttaching}
+                />
+              </>
             )}
             <BillingModeToggle
               workspaceSlug={workspaceSlug}
@@ -1165,6 +1209,45 @@ export default function BillingPage({ params }) {
               onToggle={handleToggleBillingMode}
               isLoading={isTogglingMode}
             />
+          </div>
+        )}
+
+        {/* Billing Mode Warning Modal */}
+        {showBillingWarning && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-[#0a0a0a] border border-zinc-800 rounded-lg p-6 max-w-md w-full mx-4">
+              <h3 className="text-xl font-bold mb-4">Switch to Simple Billing?</h3>
+              <p className="text-sm text-gray-400 mb-4">
+                You are currently using a non-default billing profile for this workspace.
+                Switching to simple billing will revert this workspace back to its default billing profile.
+              </p>
+              <p className="text-sm text-gray-400 mb-6">
+                Are you sure you want to continue?
+              </p>
+              <div className="flex gap-3">
+                <Button
+                  background="Green"
+                  border="Light"
+                  onClick={() => setShowBillingWarning(false)}
+                  disabled={isTogglingMode}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  background="Green"
+                  border="Light"
+                  onClick={async () => {
+                    setShowBillingWarning(false);
+                    await performBillingModeToggle(false);
+                  }}
+                  disabled={isTogglingMode}
+                  className="flex-1"
+                >
+                  {isTogglingMode ? 'Switching...' : 'Switch to Simple'}
+                </Button>
+              </div>
+            </div>
           </div>
         )}
       </Content.Container>
