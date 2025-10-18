@@ -15,6 +15,11 @@ import { useTranslation } from "react-i18next";
 import { gql } from '@apollo/client';
 import { executeQuery, executeMutation } from '@/graphql/operations';
 import { AVAILABLE_MODELS, PROVIDERS, getModelsByProvider, isModelHistoric } from '@/data/models';
+import { useEntitlements } from '@/hooks/useEntitlements';
+import { PaymentFailureBanner } from '@/components/billing/PaymentFailureBanner';
+import { UpgradeModal } from '@/components/billing/UpgradeModal';
+import { Crown } from 'lucide-react';
+import Link from 'next/link';
 
 // Define GraphQL queries and mutations
 const GET_MODELS = gql`
@@ -84,12 +89,18 @@ export default function ModelsPage({ params }) {
   const { t } = useTranslation();
   const { workspace } = useWorkspace();
   const [hasHydrated, setHasHydrated] = useState(false);
-  
+
   // GraphQL client and state
   const graphqlClient = useGraphQLClient();
   const [enabledModels, setEnabledModels] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Entitlements hook
+  const { entitlements, isLoading: entitlementsLoading } = useEntitlements();
+
+  // Upgrade modal state
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
 
   // Mark component as hydrated
@@ -138,8 +149,39 @@ export default function ModelsPage({ params }) {
     return enabledModels.find(model => model.modelId === modelId);
   };
 
+  // Check if model is allowed by entitlements
+  const isModelAllowedByPlan = (modelId) => {
+    if (!entitlements) return true; // Allow if entitlements not loaded yet
+    const modelEntitlement = entitlements.modelsAllowed.find(m => m.modelId === modelId);
+    return modelEntitlement ? modelEntitlement.isAllowed : false;
+  };
+
+  // Check if model requires upgrade
+  const doesModelRequireUpgrade = (modelId) => {
+    if (!entitlements) return false;
+    const modelEntitlement = entitlements.modelsAllowed.find(m => m.modelId === modelId);
+    return modelEntitlement ? modelEntitlement.requiresUpgrade : false;
+  };
+
+  // Check if user can add more models
+  const canAddMoreModels = () => {
+    if (!entitlements) return true; // Allow if entitlements not loaded yet
+    return entitlements.canAddModel;
+  };
+
   // Handle model selection change
   const handleModelToggle = async (availableModel, isEnabled) => {
+    // Check entitlements before enabling
+    if (isEnabled) {
+      if (!isModelAllowedByPlan(availableModel.id)) {
+        setShowUpgradeModal(true);
+        return;
+      }
+      if (!canAddMoreModels()) {
+        setShowUpgradeModal(true);
+        return;
+      }
+    }
     setIsSaving(true);
     
     try {
@@ -219,6 +261,7 @@ export default function ModelsPage({ params }) {
       />
       <Content.Divider />
       <Content.Container>
+        <PaymentFailureBanner />
         <Card>
           <Card.Body title="Available Models" subtitle="Choose from our supported AI models">
             {isLoading ? (
@@ -280,33 +323,39 @@ export default function ModelsPage({ params }) {
                         {allModelsForProvider.map((model) => {
                           const enabled = isModelEnabled(model.id);
                           const historic = model.isHistoric || isModelHistoric(model.id);
-                          
+                          const requiresUpgrade = doesModelRequireUpgrade(model.id);
+                          const isLocked = requiresUpgrade && enabled;
+
                           return (
                             <div
                               key={model.id}
                               className={`flex items-start space-x-3 p-3 border rounded-lg transition-colors ${
                                 historic
                                   ? 'border-orange-400 bg-orange-50 bg-opacity-10'
-                                  : enabled 
-                                    ? 'border-gray-400 bg-transparent cursor-pointer' 
-                                    : 'border-gray-400 hover:border-green-500 bg-transparent cursor-pointer'
+                                  : isLocked
+                                    ? 'border-red-500 bg-red-50 bg-opacity-10'
+                                    : requiresUpgrade
+                                      ? 'border-gray-400 bg-transparent opacity-60'
+                                      : enabled
+                                        ? 'border-gray-400 bg-transparent cursor-pointer'
+                                        : 'border-gray-400 hover:border-green-500 bg-transparent cursor-pointer'
                               }`}
-                              onClick={() => !isSaving && !historic && handleModelToggle(model, !enabled)}
+                              onClick={() => !isSaving && !historic && !requiresUpgrade && handleModelToggle(model, !enabled)}
                             >
                               <input
                                 type="checkbox"
                                 checked={enabled}
                                 onChange={() => {}} // Handled by onClick above
-                                disabled={isSaving || historic}
+                                disabled={isSaving || historic || requiresUpgrade}
                                 className="mt-1 w-4 h-4 accent-[#43B929] border-gray-400 bg-transparent rounded focus:ring-green-500 disabled:opacity-50"
                               />
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
-                                  <h4 className={`font-medium ${historic ? 'text-orange-400' : 'text-light'}`}>
+                                  <h4 className={`font-medium ${historic ? 'text-orange-400' : isLocked ? 'text-red-400' : 'text-light'}`}>
                                     {model.name}
                                   </h4>
                                   <span className={`text-xs px-2 py-1 bg-transparent border rounded ${
-                                    historic ? 'border-orange-400 text-orange-400' : 'border-gray-400 text-light'
+                                    historic ? 'border-orange-400 text-orange-400' : isLocked ? 'border-red-400 text-red-400' : 'border-gray-400 text-light'
                                   }`}>
                                     {model.id}
                                   </span>
@@ -315,14 +364,29 @@ export default function ModelsPage({ params }) {
                                       Historic
                                     </span>
                                   )}
+                                  {requiresUpgrade && (
+                                    <Link
+                                      href="/settings/billing"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                    >
+                                      <Crown size={12} />
+                                      Upgrade Required
+                                    </Link>
+                                  )}
                                 </div>
-                                <p className={`text-sm mt-1 ${historic ? 'text-orange-300' : 'text-light opacity-75'}`}>
+                                <p className={`text-sm mt-1 ${historic ? 'text-orange-300' : isLocked ? 'text-red-300' : 'text-light opacity-75'}`}>
                                   {model.description}
                                 </p>
                                 {historic && enabled && (
                                   <p className="text-xs text-orange-300 mt-2 italic">
-                                    This model is historic and is no longer available in the {provider.name} user interface. 
+                                    This model is historic and is no longer available in the {provider.name} user interface.
                                     If you remove it, you will no longer be able to add this model back to your workspace.
+                                  </p>
+                                )}
+                                {isLocked && (
+                                  <p className="text-xs text-red-300 mt-2 italic">
+                                    This model is no longer included in your current plan. Upgrade to continue using it, or remove it from your workspace.
                                   </p>
                                 )}
                               </div>
@@ -370,6 +434,12 @@ export default function ModelsPage({ params }) {
             </Card.Footer>
           )}
         </Card>
+
+        {/* Upgrade Modal */}
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       </Content.Container>
     </AccountLayout>
   );

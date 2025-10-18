@@ -7,6 +7,7 @@ import { AccountLayout } from '@/layouts/index';
 import Meta from '@/components/Meta/index';
 import Content from '@/components/Content/index';
 import { executeQuery, executeMutation, GET_USER_WORKSPACES } from '@/graphql/operations';
+import { useSearchParams } from 'next/navigation';
 import {
   GET_BILLING_PROFILES,
   GET_BILLING_PLANS,
@@ -334,11 +335,10 @@ function PlanSelectionStep({ plans, billingProfile, selectedInterval, onInterval
   );
 }
 
-function ManageBillingView({ billingProfile, plans, onRefetch }) {
+function ManageBillingView({ billingProfile, plans, onRefetch, isChangingPlan, setIsChangingPlan }) {
   const graphqlClient = useGraphQLClient();
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [selectedInterval, setSelectedInterval] = useState('monthly');
-  const [isChangingPlan, setIsChangingPlan] = useState(false);
 
   const currentPlanDetails = plans.find(p => p.id === billingProfile.currentPlan);
 
@@ -766,6 +766,7 @@ export default function BillingPage({ params }) {
   const { workspaceSlug } = resolvedParams || {};
   const { workspace, setWorkspace } = useWorkspace();
   const graphqlClient = useGraphQLClient();
+  const searchParams = useSearchParams();
 
   const [plans, setPlans] = useState([]);
   const [billingProfile, setBillingProfile] = useState(null);
@@ -778,6 +779,7 @@ export default function BillingPage({ params }) {
   const [availableProfiles, setAvailableProfiles] = useState([]);
   const [isAttaching, setIsAttaching] = useState(false);
   const [showBillingWarning, setShowBillingWarning] = useState(false);
+  const [isChangingPlan, setIsChangingPlan] = useState(false);
 
   const fetchData = async () => {
     if (!workspaceSlug) return;
@@ -876,6 +878,13 @@ export default function BillingPage({ params }) {
   useEffect(() => {
     fetchData();
   }, [workspace?._id, graphqlClient]);
+
+  // Check for changePlan query parameter
+  useEffect(() => {
+    if (searchParams?.get('changePlan') === 'true' && currentStep === 'manage') {
+      setIsChangingPlan(true);
+    }
+  }, [searchParams, currentStep]);
 
   const handlePlanSelect = async (plan) => {
     if (plan.id === 'enterprise') {
@@ -1170,6 +1179,8 @@ export default function BillingPage({ params }) {
               billingProfile={billingProfile}
               plans={plans}
               onRefetch={fetchData}
+              isChangingPlan={isChangingPlan}
+              setIsChangingPlan={setIsChangingPlan}
             />
             {console.log('🔍 CHECK: currentStep:', currentStep, 'billingConfig:', billingConfig, 'advancedBilling:', billingConfig?.data?.advancedBilling)}
             {billingConfig?.data?.advancedBilling && (

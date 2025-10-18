@@ -4,16 +4,17 @@ import { useState, useEffect, use } from 'react';
 import toast from 'react-hot-toast';
 import '../../i18n';
 
-import Button from '@/components/Button/index';
 import Card from '@/components/Card/index';
 import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
 import { useGraphQLClient } from '@/hooks/data/index';
 import { AccountLayout } from '@/layouts/index';
 import { useWorkspace } from '@/providers/workspace';
-import { useTranslation } from "react-i18next";
 import { gql } from '@apollo/client';
 import { executeQuery, executeMutation } from '@/graphql/operations';
+import { useEntitlements } from '@/hooks/useEntitlements';
+import { PaymentFailureBanner } from '@/components/billing/PaymentFailureBanner';
+import { UpgradeModal } from '@/components/billing/UpgradeModal';
 
 // Define GraphQL queries and mutations
 const GET_BRANDS = gql`
@@ -70,10 +71,9 @@ const DELETE_BRAND = gql`
 export default function BrandsPage({ params }) {
   const resolvedParams = use(params);
   const { workspaceSlug } = resolvedParams || {};
-  const { t } = useTranslation();
   const { workspace } = useWorkspace();
   const [hasHydrated, setHasHydrated] = useState(false);
-  
+
   // GraphQL client and state
   const graphqlClient = useGraphQLClient();
   const [originalBrands, setOriginalBrands] = useState([]);
@@ -81,6 +81,12 @@ export default function BrandsPage({ params }) {
   const [competitorBrands, setCompetitorBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Entitlements hook
+  const { entitlements } = useEntitlements();
+
+  // Upgrade modal state
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   // Get own brand from brands array
   const ownBrand = brands.find(brand => brand.isOwnBrand) || { _id: null, name: '', isOwnBrand: true };
@@ -132,8 +138,63 @@ export default function BrandsPage({ params }) {
     });
   };
 
+  // Check if user can add more brands (counting all current fields including empty ones)
+  const canAddMoreBrands = () => {
+    if (!entitlements) return true; // Allow if entitlements not loaded yet
+    const ownBrandCount = ownBrand.name.trim() || competitorBrands.length > 0 ? 1 : 0;
+    const totalBrands = ownBrandCount + competitorBrands.length;
+    return totalBrands < entitlements.brandsLimit;
+  };
+
+  // Check for duplicate brands
+  const hasDuplicateBrands = () => {
+    const allBrandNames = [
+      ownBrand.name.trim().toLowerCase(),
+      ...competitorBrands.map(b => b.name.trim().toLowerCase())
+    ].filter(name => name !== '');
+
+    const uniqueNames = new Set(allBrandNames);
+    return allBrandNames.length !== uniqueNames.size;
+  };
+
+  // Get duplicate brand indices (including own brand if duplicate)
+  const getDuplicateIndices = () => {
+    const nameMap = new Map();
+    const duplicateIndices = new Set();
+    let ownBrandIsDuplicate = false;
+
+    // Check own brand
+    const ownBrandName = ownBrand.name.trim().toLowerCase();
+    if (ownBrandName !== '') {
+      nameMap.set(ownBrandName, 'own');
+    }
+
+    // Check competitor brands
+    competitorBrands.forEach((brand, index) => {
+      const name = brand.name.trim().toLowerCase();
+      if (name === '') return;
+
+      if (nameMap.has(name)) {
+        duplicateIndices.add(index);
+        if (nameMap.get(name) === 'own') {
+          ownBrandIsDuplicate = true;
+        } else {
+          duplicateIndices.add(nameMap.get(name));
+        }
+      } else {
+        nameMap.set(name, index);
+      }
+    });
+
+    return { competitorIndices: duplicateIndices, ownBrandIsDuplicate };
+  };
+
   // Add new competitor brand field
   const addCompetitorField = () => {
+    if (!canAddMoreBrands()) {
+      setShowUpgradeModal(true);
+      return;
+    }
     setCompetitorBrands(prev => [...prev, { _id: null, name: '', isOwnBrand: false, isNew: true }]);
   };
 
@@ -144,22 +205,72 @@ export default function BrandsPage({ params }) {
 
   // Handle competitor brand change
   const handleCompetitorChange = (index, name) => {
-    setCompetitorBrands(prev => 
-      prev.map((brand, i) => 
+    setCompetitorBrands(prev =>
+      prev.map((brand, i) =>
         i === index ? { ...brand, name } : brand
       )
     );
   };
 
-  // Save all changes
-  const saveAllChanges = async () => {
+  // Check if a brand is over the limit
+  const isBrandOverLimit = (index) => {
+    if (!entitlements) return false;
+    // Own brand counts as 1, so competitor brands start at index 0
+    // If own brand has name, first competitor is at position 1 (own=0, competitor=1)
+    // If no own brand, first competitor is at position 0
+    const ownBrandCount = ownBrand.name.trim() ? 1 : 0;
+    // Brand position is 1-based (ownBrandCount + index + 1)
+    // For example: with own brand, competitor at index 0 is position 2
+    const brandPosition = ownBrandCount + index + 1;
+    return brandPosition > entitlements.brandsLimit;
+  };
+
+  // Check if own brand has unsaved changes
+  const hasOwnBrandUnsavedChanges = () => {
+    const originalOwnBrand = originalBrands.find(b => b.isOwnBrand);
+    const ownBrandName = ownBrand.name.trim();
+
+    if (originalOwnBrand && originalOwnBrand.name !== ownBrandName) return true;
+    if (!originalOwnBrand && ownBrandName) return true;
+    if (originalOwnBrand && !ownBrandName) return true;
+
+    return false;
+  };
+
+  // Check if competitor brands have unsaved changes
+  const hasCompetitorBrandsUnsavedChanges = () => {
+    const validCompetitorBrands = competitorBrands.filter(b => b.name.trim());
+
+    // Check for new competitor brands
+    if (validCompetitorBrands.some(b => !b._id)) return true;
+
+    // Check for modified competitor brands
+    if (validCompetitorBrands.some(b => {
+      const original = originalBrands.find(ob => ob._id === b._id);
+      return original && original.name !== b.name.trim();
+    })) return true;
+
+    // Check for deleted competitor brands
+    const currentCompetitorIds = validCompetitorBrands.filter(b => b._id).map(b => b._id);
+    if (originalBrands.some(ob => !ob.isOwnBrand && !currentCompetitorIds.includes(ob._id))) return true;
+
+    return false;
+  };
+
+  // Save own brand changes
+  const saveOwnBrand = async () => {
+    // Check for duplicates before saving
+    if (hasDuplicateBrands()) {
+      toast.error('Each brand must be unique. Please remove or modify duplicate brands.');
+      return;
+    }
+
     setIsSaving(true);
-    
+
     try {
       const operations = [];
-
-      // Handle own brand
       const ownBrandName = ownBrand.name.trim();
+
       if (ownBrandName) {
         const originalOwnBrand = originalBrands.find(b => b.isOwnBrand);
         if (ownBrand._id && originalOwnBrand) {
@@ -194,9 +305,56 @@ export default function BrandsPage({ params }) {
         );
       }
 
-      // Handle competitor brands
-      const validCompetitorBrands = competitorBrands.filter(b => b.name.trim());
-      
+      if (operations.length > 0) {
+        await Promise.all(operations);
+
+        // Refetch to get updated data
+        const result = await executeQuery(graphqlClient, GET_BRANDS, { workspaceSlug });
+        if (result.data) {
+          const updatedBrands = result.data.brands || [];
+          setOriginalBrands(updatedBrands);
+          setBrands(updatedBrands);
+          setCompetitorBrands(updatedBrands.filter(brand => !brand.isOwnBrand));
+          toast.success('Own brand saved successfully');
+        }
+      } else {
+        toast.success('No changes to save');
+      }
+    } catch (error) {
+      console.error("Error saving own brand:", error);
+      toast.error(`Error saving own brand: ${error.message}`);
+    }
+
+    setIsSaving(false);
+  };
+
+  // Save competitor brands changes
+  const saveCompetitorBrands = async () => {
+    // Check for duplicates before saving (only check non-over-limit brands)
+    const withinLimitBrands = competitorBrands.filter((_, index) => !isBrandOverLimit(index));
+    const ownBrandCount = ownBrand.name.trim() ? 1 : 0;
+
+    // Check duplicates only among brands we're actually saving
+    const allNamesToCheck = [
+      ...(ownBrand.name.trim() ? [ownBrand.name.trim().toLowerCase()] : []),
+      ...withinLimitBrands.map(b => b.name.trim().toLowerCase()).filter(n => n !== '')
+    ];
+    const uniqueNames = new Set(allNamesToCheck);
+    if (allNamesToCheck.length !== uniqueNames.size) {
+      toast.error('Each brand must be unique. Please remove or modify duplicate brands.');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const operations = [];
+
+      // Only process brands within the limit
+      const allowedBrandCount = entitlements ? entitlements.brandsLimit - ownBrandCount : competitorBrands.length;
+      const brandsToSave = competitorBrands.slice(0, allowedBrandCount);
+      const validCompetitorBrands = brandsToSave.filter(b => b.name.trim());
+
       // Create new competitor brands
       const newCompetitorBrands = validCompetitorBrands.filter(b => !b._id);
       for (const brand of newCompetitorBrands) {
@@ -225,11 +383,17 @@ export default function BrandsPage({ params }) {
         }
       }
 
-      // Delete removed competitor brands
+      // Delete removed competitor brands AND over-limit brands
       const currentCompetitorIds = validCompetitorBrands.filter(b => b._id).map(b => b._id);
-      const deletedCompetitorBrands = originalBrands.filter(ob => 
-        !ob.isOwnBrand && !currentCompetitorIds.includes(ob._id)
+
+      // Also get IDs of over-limit brands that need to be deleted
+      const overLimitBrands = competitorBrands.slice(allowedBrandCount);
+      const overLimitIds = overLimitBrands.filter(b => b._id).map(b => b._id);
+
+      const deletedCompetitorBrands = originalBrands.filter(ob =>
+        !ob.isOwnBrand && (!currentCompetitorIds.includes(ob._id) || overLimitIds.includes(ob._id))
       );
+
       for (const brand of deletedCompetitorBrands) {
         operations.push(
           executeMutation(graphqlClient, DELETE_BRAND, {
@@ -239,10 +403,9 @@ export default function BrandsPage({ params }) {
         );
       }
 
-      // Execute all operations
       if (operations.length > 0) {
         await Promise.all(operations);
-        
+
         // Refetch to get updated data
         const result = await executeQuery(graphqlClient, GET_BRANDS, { workspaceSlug });
         if (result.data) {
@@ -250,47 +413,25 @@ export default function BrandsPage({ params }) {
           setOriginalBrands(updatedBrands);
           setBrands(updatedBrands);
           setCompetitorBrands(updatedBrands.filter(brand => !brand.isOwnBrand));
-          toast.success('Brands saved successfully');
+
+          // Show appropriate success message
+          if (overLimitIds.length > 0) {
+            toast.success(`Brands saved. ${overLimitIds.length} over-limit brand(s) removed.`);
+          } else {
+            toast.success('Competitor brands saved successfully');
+          }
         }
       } else {
         toast.success('No changes to save');
       }
     } catch (error) {
-      console.error("Error saving brands:", error);
-      toast.error(`Error saving brands: ${error.message}`);
+      console.error("Error saving competitor brands:", error);
+      toast.error(`Error saving competitor brands: ${error.message}`);
     }
-    
+
     setIsSaving(false);
   };
 
-  // Check if there are unsaved changes
-  const hasUnsavedChanges = () => {
-    // Check own brand changes
-    const originalOwnBrand = originalBrands.find(b => b.isOwnBrand);
-    const ownBrandName = ownBrand.name.trim();
-    
-    if (originalOwnBrand && originalOwnBrand.name !== ownBrandName) return true;
-    if (!originalOwnBrand && ownBrandName) return true;
-    if (originalOwnBrand && !ownBrandName) return true;
-    
-    // Check competitor brand changes
-    const validCompetitorBrands = competitorBrands.filter(b => b.name.trim());
-    
-    // Check for new competitor brands
-    if (validCompetitorBrands.some(b => !b._id)) return true;
-    
-    // Check for modified competitor brands
-    if (validCompetitorBrands.some(b => {
-      const original = originalBrands.find(ob => ob._id === b._id);
-      return original && original.name !== b.name.trim();
-    })) return true;
-    
-    // Check for deleted competitor brands
-    const currentCompetitorIds = validCompetitorBrands.filter(b => b._id).map(b => b._id);
-    if (originalBrands.some(ob => !ob.isOwnBrand && !currentCompetitorIds.includes(ob._id))) return true;
-    
-    return false;
-  };
 
   return (
     <AccountLayout routerType="app">
@@ -301,6 +442,8 @@ export default function BrandsPage({ params }) {
       />
       <Content.Divider />
       <Content.Container>
+        <PaymentFailureBanner />
+
         {/* Your Brand Section */}
         <Card>
           <Card.Body title="Your Brand" subtitle="Set your primary brand name">
@@ -315,11 +458,37 @@ export default function BrandsPage({ params }) {
                   value={ownBrand.name}
                   onChange={(e) => handleOwnBrandChange(e.target.value)}
                   placeholder="Enter your brand name..."
-                  className="w-full px-3 py-2 bg-transparent border border-gray-400 text-light rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className={`w-full px-3 py-2 bg-transparent border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
+                    getDuplicateIndices().ownBrandIsDuplicate
+                      ? 'border-red-500 focus:ring-red-500'
+                      : 'border-gray-400 focus:ring-green-500'
+                  } text-light`}
                 />
+                {getDuplicateIndices().ownBrandIsDuplicate && (
+                  <p className="text-xs text-red-500 mt-1">
+                    Duplicate brand - each brand must be unique
+                  </p>
+                )}
               </div>
             )}
           </Card.Body>
+          <Card.Footer>
+            <div className="flex justify-end items-center w-full">
+              <button
+                onClick={saveOwnBrand}
+                disabled={isLoading || isSaving || !hasOwnBrandUnsavedChanges()}
+                className={`
+                  px-6 py-2 rounded-md font-semibold text-dark transition-colors
+                  ${isLoading || isSaving || !hasOwnBrandUnsavedChanges()
+                    ? 'bg-gray-300 cursor-not-allowed'
+                    : 'bg-[#51F72B] hover:bg-[#37B91A]'
+                  }
+                `}
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          </Card.Footer>
         </Card>
 
         {/* Competitor Brands Section */}
@@ -333,38 +502,78 @@ export default function BrandsPage({ params }) {
               </div>
             ) : (
               <div className="space-y-4">
-                {competitorBrands.map((brand, index) => (
-                  <div key={brand._id || `competitor-${index}`} className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={brand.name}
-                      onChange={(e) => handleCompetitorChange(index, e.target.value)}
-                      placeholder={`Competitor brand ${index + 1}...`}
-                      className="flex-1 px-3 py-2 bg-transparent border border-gray-400 text-light rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                    />
-                    {/* Remove button - hidden for first field */}
-                    {index > 0 && (
-                      <button
-                        onClick={() => removeCompetitorField(index)}
-                        className="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
-                        title="Remove field"
-                      >
-                        ×
-                      </button>
-                    )}
-                    {/* Add button - only show on last field or if it's the only field */}
-                    {(index === competitorBrands.length - 1 || competitorBrands.length === 1) && (
-                      <button
-                        onClick={addCompetitorField}
-                        className="px-3 py-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
-                        title="Add field"
-                        disabled={isLoading || isSaving}
-                      >
-                        +
-                      </button>
-                    )}
-                  </div>
-                ))}
+                {competitorBrands.map((brand, index) => {
+                  const duplicates = getDuplicateIndices();
+                  const isDuplicate = duplicates.competitorIndices.has(index);
+                  const isOverLimit = isBrandOverLimit(index);
+
+                  return (
+                    <div key={brand._id || `competitor-${index}`}>
+                      <div className="flex items-center space-x-2">
+                        <div className="flex-1">
+                          <input
+                            type="text"
+                            value={brand.name}
+                            onChange={(e) => {
+                              if (isOverLimit) {
+                                setShowUpgradeModal(true);
+                                return;
+                              }
+                              handleCompetitorChange(index, e.target.value);
+                            }}
+                            onClick={() => {
+                              if (isOverLimit) {
+                                setShowUpgradeModal(true);
+                              }
+                            }}
+                            placeholder={`Competitor brand ${index + 1}...`}
+                            className={`w-full px-3 py-2 bg-transparent border rounded-md focus:outline-none focus:ring-2 focus:border-transparent ${
+                              isDuplicate || isOverLimit
+                                ? 'border-red-500 focus:ring-red-500'
+                                : 'border-gray-400 focus:ring-green-500'
+                            } ${isOverLimit ? 'cursor-pointer' : ''} text-light`}
+                            readOnly={isOverLimit}
+                          />
+                          {isDuplicate && !isOverLimit && (
+                            <p className="text-xs text-red-500 mt-1">
+                              Duplicate brand - each brand must be unique
+                            </p>
+                          )}
+                          {isOverLimit && (
+                            <p className="text-xs text-red-500 mt-1">
+                              Over limit - will be removed when saving
+                            </p>
+                          )}
+                        </div>
+                        {/* Remove button - hidden for first field */}
+                        {index > 0 && (
+                          <button
+                            onClick={() => removeCompetitorField(index)}
+                            className="px-3 py-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors self-start"
+                            title="Remove field"
+                          >
+                            ×
+                          </button>
+                        )}
+                        {/* Add button - only show on last field or if it's the only field */}
+                        {(index === competitorBrands.length - 1 || competitorBrands.length === 1) && (
+                          <button
+                            onClick={addCompetitorField}
+                            className={`px-3 py-2 rounded-md transition-colors self-start ${
+                              !canAddMoreBrands()
+                                ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50'
+                                : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                            }`}
+                            title={!canAddMoreBrands() ? 'Upgrade to add more brands' : 'Add field'}
+                            disabled={isLoading || isSaving}
+                          >
+                            +
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
                 
                 {competitorBrands.length === 0 && !isLoading && (
                   <div className="flex items-center space-x-2">
@@ -373,6 +582,10 @@ export default function BrandsPage({ params }) {
                       value=""
                       onChange={(e) => {
                         if (e.target.value) {
+                          if (!canAddMoreBrands()) {
+                            setShowUpgradeModal(true);
+                            return;
+                          }
                           addCompetitorField();
                           setTimeout(() => {
                             handleCompetitorChange(0, e.target.value);
@@ -384,8 +597,12 @@ export default function BrandsPage({ params }) {
                     />
                     <button
                       onClick={addCompetitorField}
-                      className="px-3 py-2 text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
-                      title="Add field"
+                      className={`px-3 py-2 rounded-md transition-colors ${
+                        !canAddMoreBrands()
+                          ? 'text-yellow-500 hover:text-yellow-600 hover:bg-yellow-50'
+                          : 'text-green-600 hover:text-green-800 hover:bg-green-50'
+                      }`}
+                      title={!canAddMoreBrands() ? 'Upgrade to add more brands' : 'Add field'}
                       disabled={isLoading || isSaving}
                     >
                       +
@@ -394,16 +611,25 @@ export default function BrandsPage({ params }) {
                 )}
               </div>
             )}
+
+            {/* Usage Indicator at Bottom */}
+            {entitlements && !isLoading && (
+              <div className="mt-6 pt-4 border-t border-gray-700">
+                <p className="text-sm text-gray-400">
+                  {(ownBrand.name.trim() ? 1 : 0) + competitorBrands.filter(b => b.name.trim()).length} of {entitlements.brandsLimit} brands used
+                </p>
+              </div>
+            )}
           </Card.Body>
           <Card.Footer>
             <div className="flex justify-end items-center w-full">
               <button
-                onClick={saveAllChanges}
-                disabled={isLoading || isSaving || !hasUnsavedChanges()}
+                onClick={saveCompetitorBrands}
+                disabled={isLoading || isSaving || !hasCompetitorBrandsUnsavedChanges()}
                 className={`
                   px-6 py-2 rounded-md font-semibold text-dark transition-colors
-                  ${isLoading || isSaving || !hasUnsavedChanges() 
-                    ? 'bg-gray-300 cursor-not-allowed' 
+                  ${isLoading || isSaving || !hasCompetitorBrandsUnsavedChanges()
+                    ? 'bg-gray-300 cursor-not-allowed'
                     : 'bg-[#51F72B] hover:bg-[#37B91A]'
                   }
                 `}
@@ -413,6 +639,12 @@ export default function BrandsPage({ params }) {
             </div>
           </Card.Footer>
         </Card>
+
+        {/* Upgrade Modal */}
+        <UpgradeModal
+          isOpen={showUpgradeModal}
+          onClose={() => setShowUpgradeModal(false)}
+        />
       </Content.Container>
     </AccountLayout>
   );
