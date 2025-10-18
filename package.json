@@ -36,6 +36,7 @@
     "json-rules-engine": "^7.3.0",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.546.0",
     "micro": "^9.4.1",
     "mongodb": "^6.3.0",
     "mongoose": "^8.13.1",
