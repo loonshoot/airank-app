@@ -138,12 +138,11 @@ export default function BrandsPage({ params }) {
     });
   };
 
-  // Check if user can add more brands (counting all current fields including empty ones)
+  // Check if user can add more brands (only counting competitor brands)
   const canAddMoreBrands = () => {
     if (!entitlements) return true; // Allow if entitlements not loaded yet
-    const ownBrandCount = ownBrand.name.trim() || competitorBrands.length > 0 ? 1 : 0;
-    const totalBrands = ownBrandCount + competitorBrands.length;
-    return totalBrands < entitlements.brandsLimit;
+    // Only count competitor brands - own brand doesn't count toward limit
+    return competitorBrands.length < entitlements.brandsLimit;
   };
 
   // Check for duplicate brands
@@ -215,13 +214,9 @@ export default function BrandsPage({ params }) {
   // Check if a brand is over the limit
   const isBrandOverLimit = (index) => {
     if (!entitlements) return false;
-    // Own brand counts as 1, so competitor brands start at index 0
-    // If own brand has name, first competitor is at position 1 (own=0, competitor=1)
-    // If no own brand, first competitor is at position 0
-    const ownBrandCount = ownBrand.name.trim() ? 1 : 0;
-    // Brand position is 1-based (ownBrandCount + index + 1)
-    // For example: with own brand, competitor at index 0 is position 2
-    const brandPosition = ownBrandCount + index + 1;
+    // Only competitor brands count toward limit - own brand is free
+    // Competitor brand at index 0 is position 1, index 1 is position 2, etc.
+    const brandPosition = index + 1;
     return brandPosition > entitlements.brandsLimit;
   };
 
@@ -350,8 +345,8 @@ export default function BrandsPage({ params }) {
     try {
       const operations = [];
 
-      // Only process brands within the limit
-      const allowedBrandCount = entitlements ? entitlements.brandsLimit - ownBrandCount : competitorBrands.length;
+      // Only process competitor brands within the limit (own brand doesn't count)
+      const allowedBrandCount = entitlements ? entitlements.brandsLimit : competitorBrands.length;
       const brandsToSave = competitorBrands.slice(0, allowedBrandCount);
       const validCompetitorBrands = brandsToSave.filter(b => b.name.trim());
 
@@ -616,7 +611,7 @@ export default function BrandsPage({ params }) {
             {entitlements && !isLoading && (
               <div className="mt-6 pt-4 border-t border-gray-700">
                 <p className="text-sm text-gray-400">
-                  {(ownBrand.name.trim() ? 1 : 0) + competitorBrands.filter(b => b.name.trim()).length} of {entitlements.brandsLimit} brands used
+                  {competitorBrands.filter(b => b.name.trim()).length} of {entitlements.brandsLimit} competitor brands used
                 </p>
               </div>
             )}

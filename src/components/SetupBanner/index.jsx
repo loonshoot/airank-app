@@ -40,8 +40,8 @@ const SCHEDULE_JOB = gql`
 
 // GraphQL mutation for updating config
 const UPDATE_CONFIG = gql`
-  mutation UpdateConfig($workspaceId: String!, $configs: [ConfigInput]!) {
-    updateConfig(workspaceId: $workspaceId, configs: $configs) {
+  mutation UpdateWorkspaceConfigs($workspaceSlug: String!, $configs: JSON!) {
+    updateWorkspaceConfigs(workspaceSlug: $workspaceSlug, configs: $configs) {
       configType
       data
     }
@@ -135,7 +135,7 @@ const SetupBanner = () => {
             graphqlClient,
             UPDATE_CONFIG,
             {
-              workspaceId: workspace._id,
+              workspaceSlug: workspace.slug,
               configs: [
                 {
                   configType: 'setup',
