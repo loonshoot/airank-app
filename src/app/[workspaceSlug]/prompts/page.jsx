@@ -131,7 +131,7 @@ export default function PromptsPage({ params }) {
 
   // Get character limit
   const getCharacterLimit = () => {
-    return entitlements?.promptCharacterLimit || 25;
+    return entitlements?.promptCharacterLimit || 150;
   };
 
   // Add new empty prompt field

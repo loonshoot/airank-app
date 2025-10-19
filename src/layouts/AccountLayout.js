@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import Content from '@/components/Content/index';
 import Header from '@/components/Header/index';
 import Sidebar from '@/components/Sidebar/index';
+import SetupBanner from '@/components/SetupBanner/index';
 import menu from '@/config/menu/index';
 import { useWorkspace } from '@/providers/workspace';
 import { useRouterContext } from '@/providers/router';
@@ -26,6 +27,7 @@ const AccountLayout = ({ children, routerType }) => {
       <Sidebar menu={menu(workspace?.slug)} routerType={routerType} />
       <Content>
         <Header routerType={routerType} />
+        <SetupBanner />
         {children}
       </Content>
       <Toaster position="bottom-left" toastOptions={{ duration: 10000 }} />
