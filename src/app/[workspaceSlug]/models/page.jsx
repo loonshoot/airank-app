@@ -18,8 +18,6 @@ import { AVAILABLE_MODELS, PROVIDERS, getModelsByProvider, isModelHistoric } fro
 import { useEntitlements } from '@/hooks/useEntitlements';
 import { PaymentFailureBanner } from '@/components/billing/PaymentFailureBanner';
 import { UpgradeModal } from '@/components/billing/UpgradeModal';
-import { Crown } from 'lucide-react';
-import Link from 'next/link';
 
 // Define GraphQL queries and mutations
 const GET_MODELS = gql`
@@ -169,6 +167,72 @@ export default function ModelsPage({ params }) {
     return entitlements.canAddModel;
   };
 
+  // Get model entitlement info
+  const getModelEntitlement = (modelId) => {
+    if (!entitlements) return null;
+    return entitlements.modelsAllowed.find(m => m.modelId === modelId);
+  };
+
+  // Handle model succession (switching from deprecated to suggested upgrade)
+  const handleModelSuccession = async (oldModelId, newModelId) => {
+    setIsSaving(true);
+
+    try {
+      const oldModel = getEnabledModel(oldModelId);
+      const newModelEntitlement = getModelEntitlement(newModelId);
+
+      if (!newModelEntitlement) {
+        toast.error('Suggested model not found');
+        setIsSaving(false);
+        return;
+      }
+
+      // Disable old model
+      if (oldModel) {
+        const disableResult = await executeMutation(
+          graphqlClient,
+          DELETE_MODEL,
+          { workspaceSlug, id: oldModel._id }
+        );
+
+        if (disableResult.error) {
+          toast.error(`Failed to disable old model: ${disableResult.error.message}`);
+          setIsSaving(false);
+          return;
+        }
+      }
+
+      // Enable new model
+      const enableResult = await executeMutation(
+        graphqlClient,
+        CREATE_MODEL,
+        {
+          workspaceSlug,
+          name: newModelEntitlement.name,
+          provider: newModelEntitlement.provider,
+          modelId: newModelEntitlement.modelId,
+          isEnabled: true
+        }
+      );
+
+      if (enableResult.data) {
+        setEnabledModels(prev => {
+          // Remove old model and add new model
+          const filtered = prev.filter(m => m.modelId !== oldModelId);
+          return [...filtered, enableResult.data.createModel];
+        });
+        toast.success(`Switched from ${getModelEntitlement(oldModelId)?.name} to ${newModelEntitlement.name}`);
+      } else if (enableResult.error) {
+        toast.error(`Failed to enable new model: ${enableResult.error.message}`);
+      }
+    } catch (error) {
+      console.error("Error during model succession:", error);
+      toast.error(`Error switching models: ${error.message}`);
+    }
+
+    setIsSaving(false);
+  };
+
   // Handle model selection change
   const handleModelToggle = async (availableModel, isEnabled) => {
     // Check entitlements before enabling
@@ -280,34 +344,38 @@ export default function ModelsPage({ params }) {
                   </div>
                 ))}
               </div>
-            ) : (
+            ) : entitlements ? (
               <div className="space-y-8">
                 {PROVIDERS.map((provider) => {
-                  const providerModels = getModelsByProvider(provider.id);
-                  
-                  // Get user's enabled models for this provider (including historic ones)
-                  const userEnabledModels = enabledModels.filter(userModel => 
-                    userModel.provider === provider.id && userModel.isEnabled
-                  );
-                  
-                  // Combine current available models with user's historic models
-                  const allModelsForProvider = [...providerModels];
-                  
-                  // Add user's historic models that aren't in current available models
-                  userEnabledModels.forEach(userModel => {
-                    if (!providerModels.find(availableModel => availableModel.id === userModel.modelId)) {
-                      allModelsForProvider.push({
-                        id: userModel.modelId,
-                        name: userModel.name,
-                        provider: userModel.provider,
-                        description: 'Historic model - no longer available for new selections',
-                        isHistoric: true
-                      });
-                    }
+                  // Get models for this provider from AVAILABLE_MODELS
+                  const availableModelsForProvider = getModelsByProvider(provider.id);
+
+                  // Also get any enabled models for this provider that aren't in AVAILABLE_MODELS (deprecated/historic)
+                  const historicEnabledModels = enabledModels.filter(em => {
+                    // Find the entitlement info for this model
+                    const entitlement = entitlements.modelsAllowed.find(m => m.modelId === em.modelId);
+                    return entitlement &&
+                           entitlement.provider === provider.id &&
+                           !AVAILABLE_MODELS.find(am => am.id === em.modelId);
                   });
-                  
+
+                  // Combine available models with historic enabled models
+                  const allModelsForProvider = [
+                    ...availableModelsForProvider,
+                    ...historicEnabledModels.map(hem => {
+                      const entitlement = entitlements.modelsAllowed.find(m => m.modelId === hem.modelId);
+                      return {
+                        id: hem.modelId,
+                        name: entitlement?.name || hem.name,
+                        provider: provider.id,
+                        description: entitlement?.description || 'Historic model',
+                        isHistoric: true
+                      };
+                    })
+                  ];
+
                   if (allModelsForProvider.length === 0) return null;
-                  
+
                   return (
                     <div key={provider.id}>
                       <div className="flex items-center space-x-3 mb-4">
@@ -318,44 +386,61 @@ export default function ModelsPage({ params }) {
                           ({allModelsForProvider.filter(model => isModelEnabled(model.id)).length} of {allModelsForProvider.length} enabled)
                         </span>
                       </div>
-                      
+
                       <div className="grid gap-3">
                         {allModelsForProvider.map((model) => {
                           const enabled = isModelEnabled(model.id);
+                          const entitlement = getModelEntitlement(model.id);
                           const historic = model.isHistoric || isModelHistoric(model.id);
-                          const requiresUpgrade = doesModelRequireUpgrade(model.id);
+                          const requiresUpgrade = entitlement ? entitlement.requiresUpgrade : false;
+                          const isSelectable = entitlement ? entitlement.isSelectable : true;
+                          const suggestedUpgrade = entitlement?.suggestedUpgrade;
+                          const isDeprecated = !isSelectable && suggestedUpgrade;
                           const isLocked = requiresUpgrade && enabled;
 
                           return (
                             <div
                               key={model.id}
                               className={`flex items-start space-x-3 p-3 border rounded-lg transition-colors ${
-                                historic
+                                isDeprecated && enabled
                                   ? 'border-orange-400 bg-orange-50 bg-opacity-10'
-                                  : isLocked
-                                    ? 'border-red-500 bg-red-50 bg-opacity-10'
-                                    : requiresUpgrade
-                                      ? 'border-gray-400 bg-transparent opacity-60'
-                                      : enabled
-                                        ? 'border-gray-400 bg-transparent cursor-pointer'
-                                        : 'border-gray-400 hover:border-green-500 bg-transparent cursor-pointer'
+                                  : historic
+                                    ? 'border-orange-400 bg-orange-50 bg-opacity-10'
+                                    : isLocked
+                                      ? 'border-red-500 bg-red-50 bg-opacity-10'
+                                      : requiresUpgrade && !enabled
+                                        ? 'border-gray-400 bg-transparent opacity-60'
+                                        : enabled
+                                          ? 'border-gray-400 bg-transparent cursor-pointer'
+                                          : 'border-gray-400 hover:border-green-500 bg-transparent cursor-pointer'
                               }`}
-                              onClick={() => !isSaving && !historic && !requiresUpgrade && handleModelToggle(model, !enabled)}
+                              onClick={() => {
+                                if (isSaving || historic || isDeprecated) return;
+                                if (requiresUpgrade && !enabled) {
+                                  setShowUpgradeModal(true);
+                                  return;
+                                }
+                                if (!requiresUpgrade && isSelectable) {
+                                  handleModelToggle(model, !enabled);
+                                }
+                              }}
                             >
                               <input
                                 type="checkbox"
                                 checked={enabled}
                                 onChange={() => {}} // Handled by onClick above
-                                disabled={isSaving || historic || requiresUpgrade}
+                                disabled={isSaving || historic || isDeprecated || requiresUpgrade}
                                 className="mt-1 w-4 h-4 accent-[#43B929] border-gray-400 bg-transparent rounded focus:ring-green-500 disabled:opacity-50"
                               />
                               <div className="flex-1">
                                 <div className="flex items-center space-x-2">
-                                  <h4 className={`font-medium ${historic ? 'text-orange-400' : isLocked ? 'text-red-400' : 'text-light'}`}>
+                                  <h4 className={`font-medium ${
+                                    isDeprecated || historic ? 'text-orange-400' : isLocked ? 'text-red-400' : 'text-light'
+                                  }`}>
                                     {model.name}
                                   </h4>
                                   <span className={`text-xs px-2 py-1 bg-transparent border rounded ${
-                                    historic ? 'border-orange-400 text-orange-400' : isLocked ? 'border-red-400 text-red-400' : 'border-gray-400 text-light'
+                                    isDeprecated || historic ? 'border-orange-400 text-orange-400' : isLocked ? 'border-red-400 text-red-400' : 'border-gray-400 text-light'
                                   }`}>
                                     {model.id}
                                   </span>
@@ -364,24 +449,44 @@ export default function ModelsPage({ params }) {
                                       Historic
                                     </span>
                                   )}
-                                  {requiresUpgrade && (
-                                    <Link
-                                      href="/settings/billing"
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                                  {isDeprecated && enabled && suggestedUpgrade && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleModelSuccession(model.id, suggestedUpgrade.modelId);
+                                      }}
+                                      disabled={isSaving}
+                                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-orange-500 text-white rounded hover:bg-orange-600 disabled:opacity-50"
                                     >
-                                      <Crown size={12} />
-                                      Upgrade Required
-                                    </Link>
+                                      Deprecated - change to {suggestedUpgrade.name}
+                                    </button>
+                                  )}
+                                  {requiresUpgrade && !enabled && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowUpgradeModal(true);
+                                      }}
+                                      className="inline-flex items-center gap-1 text-xs px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                    >
+                                      Upgrade to use
+                                    </button>
                                   )}
                                 </div>
-                                <p className={`text-sm mt-1 ${historic ? 'text-orange-300' : isLocked ? 'text-red-300' : 'text-light opacity-75'}`}>
+                                <p className={`text-sm mt-1 ${
+                                  isDeprecated || historic ? 'text-orange-300' : isLocked ? 'text-red-300' : 'text-light opacity-75'
+                                }`}>
                                   {model.description}
                                 </p>
-                                {historic && enabled && (
+                                {historic && enabled && !isDeprecated && (
                                   <p className="text-xs text-orange-300 mt-2 italic">
                                     This model is historic and is no longer available in the {provider.name} user interface.
                                     If you remove it, you will no longer be able to add this model back to your workspace.
+                                  </p>
+                                )}
+                                {isDeprecated && enabled && (
+                                  <p className="text-xs text-orange-300 mt-2 italic">
+                                    This model is deprecated. Click the button above to switch to {suggestedUpgrade?.name}.
                                   </p>
                                 )}
                                 {isLocked && (
@@ -390,7 +495,7 @@ export default function ModelsPage({ params }) {
                                   </p>
                                 )}
                               </div>
-                              {historic && enabled && (
+                              {historic && enabled && !isDeprecated && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -415,6 +520,10 @@ export default function ModelsPage({ params }) {
                     <p>No models enabled yet. Select models above to get started.</p>
                   </div>
                 )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-light opacity-75">
+                <p>Loading entitlements...</p>
               </div>
             )}
           </Card.Body>

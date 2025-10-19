@@ -29,9 +29,17 @@ export const GET_ENTITLEMENTS = gql`
         modelId
         name
         provider
+        description
         isAllowed
         requiresUpgrade
         priority
+        isCurrentlyEnabled
+        isSelectable
+        allowedInBatchJobs
+        suggestedUpgrade {
+          modelId
+          name
+        }
       }
 
       # Job configuration
@@ -77,9 +85,17 @@ export const REFRESH_ENTITLEMENTS = gql`
         modelId
         name
         provider
+        description
         isAllowed
         requiresUpgrade
         priority
+        isCurrentlyEnabled
+        isSelectable
+        allowedInBatchJobs
+        suggestedUpgrade {
+          modelId
+          name
+        }
       }
 
       # Job configuration

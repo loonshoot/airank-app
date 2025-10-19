@@ -62,9 +62,43 @@ export const authOptions = {
   },
   events: {
     signIn: async ({ user, isNewUser }) => {
-      console.log("Sign-in event:", { userId: user.id, isNewUser });
-      // const customerPayment = await getPayment(user.email);
+      console.log("Sign-in event:", { userId: user.id, isNewUser, email: user.email });
 
+      // Sync user to MongoDB airank.users collection
+      try {
+        const mongoose = require('mongoose');
+        const airankUri = `${process.env.MONGODB_URI}/airank?${process.env.MONGODB_PARAMS}`;
+        const airankDb = mongoose.createConnection(airankUri);
+        await airankDb.asPromise();
+
+        const usersCollection = airankDb.collection('users');
+
+        // Upsert user (create or update)
+        await usersCollection.updateOne(
+          { _id: user.id },
+          {
+            $set: {
+              _id: user.id,
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              updatedAt: new Date()
+            },
+            $setOnInsert: {
+              createdAt: new Date()
+            }
+          },
+          { upsert: true }
+        );
+
+        console.log("User synced to MongoDB:", { userId: user.id, email: user.email });
+
+        await airankDb.close();
+      } catch (error) {
+        console.error("Error syncing user to MongoDB:", error);
+      }
+
+      // const customerPayment = await getPayment(user.email);
       // if (isNewUser || customerPayment === null || user.createdAt === null) {
       //   await Promise.all([createPaymentAccount(user.email, user.id)]);
       // }
