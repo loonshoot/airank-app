@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { useWorkspace } from '@/providers/workspace';
 import { useGraphQLClient } from '@/hooks/data/index';
 import { executeQuery, executeMutation } from '@/graphql/operations';
@@ -49,6 +50,7 @@ const UPDATE_CONFIG = gql`
 `;
 
 const SetupBanner = () => {
+  const pathname = usePathname();
   const { workspace } = useWorkspace();
   const graphqlClient = useGraphQLClient();
   const [isSchedulingJob, setIsSchedulingJob] = useState(false);
@@ -59,6 +61,9 @@ const SetupBanner = () => {
     inSetupMode: true,
     isLoading: true
   });
+
+  // Don't show banner on account selection page
+  if (pathname === '/account') return null;
 
   // Check workspace configuration
   useEffect(() => {
