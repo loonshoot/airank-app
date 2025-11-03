@@ -31,7 +31,7 @@ import {
   LabelList
 } from 'recharts';
 import { CalendarIcon } from '@heroicons/react/24/outline';
-import { format, subDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
+import { format, subDays, addDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 // GraphQL query for workspace configuration
 const GET_WORKSPACE_CONFIG = gql`
@@ -199,7 +199,7 @@ export default function WorkspacePage({ params }) {
   const [error, setError] = useState(null);
   const [dateRange, setDateRange] = useState({
     start: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
-    end: format(new Date(), 'yyyy-MM-dd')
+    end: format(addDays(new Date(), 1), 'yyyy-MM-dd')
   });
   const [dynamicChartConfig, setDynamicChartConfig] = useState(chartConfig);
   const [activeIndex, setActiveIndex] = useState(0);
