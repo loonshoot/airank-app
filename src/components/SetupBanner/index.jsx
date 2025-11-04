@@ -14,6 +14,7 @@ const GET_WORKSPACE_CONFIG = gql`
   query GetWorkspaceConfig($workspaceId: String!) {
     brands(workspaceId: $workspaceId) {
       _id
+      isOwnBrand
     }
     models(workspaceId: $workspaceId) {
       _id
@@ -55,6 +56,7 @@ const SetupBanner = () => {
   const graphqlClient = useGraphQLClient();
   const [isSchedulingJob, setIsSchedulingJob] = useState(false);
   const [workspaceConfig, setWorkspaceConfig] = useState({
+    hasOwnBrand: false,
     hasBrands: false,
     hasModels: false,
     hasPrompts: false,
@@ -78,6 +80,7 @@ const SetupBanner = () => {
         );
 
         if (result.data) {
+          const hasOwnBrand = result.data.brands?.some(b => b.isOwnBrand === true);
           const hasBrands = result.data.brands?.length > 0;
           const hasModels = result.data.models?.some(m => m.isEnabled);
           const hasPrompts = result.data.prompts?.length > 0;
@@ -87,6 +90,7 @@ const SetupBanner = () => {
           const inSetupMode = setupConfig?.data?.inSetupMode !== false;
 
           setWorkspaceConfig({
+            hasOwnBrand,
             hasBrands,
             hasModels,
             hasPrompts,
@@ -172,7 +176,7 @@ const SetupBanner = () => {
   if (workspaceConfig.isLoading) return null;
   if (!workspaceConfig.inSetupMode) return null;
 
-  const allConfigured = workspaceConfig.hasBrands && workspaceConfig.hasModels && workspaceConfig.hasPrompts;
+  const allConfigured = workspaceConfig.hasOwnBrand && workspaceConfig.hasModels && workspaceConfig.hasPrompts;
 
   // Show completion banner
   if (allConfigured) {
@@ -221,13 +225,13 @@ const SetupBanner = () => {
             <button
               onClick={() => window.location.href = `/${workspace?.slug}/brands`}
               className={`text-sm font-medium transition-all ${
-                workspaceConfig.hasBrands
+                workspaceConfig.hasOwnBrand
                   ? 'line-through text-green-600 dark:text-green-400 cursor-default'
                   : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 underline'
               }`}
-              disabled={workspaceConfig.hasBrands}
+              disabled={workspaceConfig.hasOwnBrand}
             >
-              Configure Brands
+              Set Primary Brand
             </button>
             <span className="text-blue-600 dark:text-blue-400">&gt;</span>
             <button
