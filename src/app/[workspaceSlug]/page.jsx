@@ -450,7 +450,7 @@ export default function WorkspacePage({ params }) {
 
   // Determine which dashboard state to show
   const showSampleDashboard = !workspaceConfig.hasBrands && !workspaceConfig.hasModels && !workspaceConfig.hasPrompts;
-  const showConfigPrompt = (workspaceConfig.hasBrands || workspaceConfig.hasModels || workspaceConfig.hasPrompts) && !workspaceConfig.hasData;
+  const showConfigPrompt = (workspaceConfig.hasBrands || workspaceConfig.hasModels || workspaceConfig.hasPrompts) && (!analyticsData || analyticsData.summary?.totalResults === 0);
 
   // STATE 1: Sample Dashboard (no configuration at all)
   if (!isLoading && showSampleDashboard) {
