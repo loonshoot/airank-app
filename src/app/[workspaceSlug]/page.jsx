@@ -14,8 +14,8 @@ import {
   ChartTooltipContent
 } from '@/components/ui/chart';
 import {
-  AreaChart,
-  Area,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -27,8 +27,7 @@ import {
   ResponsiveContainer,
   Sector,
   Legend,
-  Tooltip,
-  LabelList
+  Tooltip
 } from 'recharts';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { format, subDays, addDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';
@@ -61,6 +60,7 @@ const GET_ANALYTICS = gql`
           end
         }
         ownBrandMentionPercentage
+        exclusivityRate
       }
       dailyMentions {
         date
@@ -87,8 +87,10 @@ const GET_ANALYTICS = gql`
       }
       mentionsByModel {
         modelName
-        mentionCount
-        percentage
+        ownBrandMentions
+        competitorMentions
+        totalMentions
+        ownBrandPercentage
       }
       ownBrandPromptPerformance {
         prompt
@@ -99,6 +101,36 @@ const GET_ANALYTICS = gql`
         prompt
         winCount
         percentage
+      }
+      coMentionAnalysis {
+        brandName
+        coMentions {
+          brandName
+          count
+          percentage
+        }
+      }
+      brandPositionAnalysis {
+        brandName
+        brandType
+        averagePosition
+        firstMentions
+        totalMentions
+      }
+      sentimentTrend {
+        date
+        positive
+        negative
+        neutral
+        positivePercentage
+      }
+      competitiveBreakdown {
+        brandName
+        brandType
+        sentimentGap
+        averagePosition
+        positivePercentage
+        mentionCount
       }
     }
   }
@@ -113,7 +145,8 @@ const MOCK_ANALYTICS_DATA = {
       start: format(subDays(new Date(), 30), 'yyyy-MM-dd'),
       end: format(new Date(), 'yyyy-MM-dd')
     },
-    ownBrandMentionPercentage: 42.5
+    ownBrandMentionPercentage: 42.5,
+    exclusivityRate: 28.5
   },
   dailyMentions: Array.from({ length: 30 }, (_, i) => ({
     date: format(subDays(new Date(), 29 - i), 'yyyy-MM-dd'),
@@ -137,9 +170,9 @@ const MOCK_ANALYTICS_DATA = {
     { brandName: 'Competitor C', brandType: 'competitor', mentionCount: 20, percentage: 2.2 }
   ],
   mentionsByModel: [
-    { modelName: 'GPT-4o', mentionCount: 325, percentage: 38.5 },
-    { modelName: 'Claude 3.5 Sonnet', mentionCount: 285, percentage: 33.7 },
-    { modelName: 'Gemini 2.5 Pro', mentionCount: 235, percentage: 27.8 }
+    { modelName: 'GPT-4o', ownBrandMentions: 145, competitorMentions: 180, totalMentions: 325, ownBrandPercentage: 44.6 },
+    { modelName: 'Claude 3.5 Sonnet', ownBrandMentions: 132, competitorMentions: 153, totalMentions: 285, ownBrandPercentage: 46.3 },
+    { modelName: 'Gemini 2.5 Pro', ownBrandMentions: 108, competitorMentions: 127, totalMentions: 235, ownBrandPercentage: 46.0 }
   ],
   ownBrandPromptPerformance: [
     { prompt: 'Best AI tools for marketing', winCount: 145, percentage: 65.0 },
@@ -150,6 +183,35 @@ const MOCK_ANALYTICS_DATA = {
     { prompt: 'Best AI tools for marketing', winCount: 78, percentage: 35.0 },
     { prompt: 'Top software solutions', winCount: 92, percentage: 41.8 },
     { prompt: 'Leading tech platforms', winCount: 102, percentage: 47.7 }
+  ],
+  coMentionAnalysis: [
+    {
+      brandName: 'Your Brand',
+      coMentions: [
+        { brandName: 'Competitor A', count: 245, percentage: 63.6 },
+        { brandName: 'Competitor B', count: 178, percentage: 46.2 },
+        { brandName: 'Competitor C', count: 12, percentage: 3.1 }
+      ]
+    }
+  ],
+  brandPositionAnalysis: [
+    { brandName: 'Your Brand', brandType: 'own', averagePosition: 2.3, firstMentions: 142, totalMentions: 385 },
+    { brandName: 'Competitor A', brandType: 'competitor', averagePosition: 1.8, firstMentions: 165, totalMentions: 290 },
+    { brandName: 'Competitor B', brandType: 'competitor', averagePosition: 2.9, firstMentions: 58, totalMentions: 210 },
+    { brandName: 'Competitor C', brandType: 'competitor', averagePosition: 3.5, firstMentions: 4, totalMentions: 20 }
+  ],
+  sentimentTrend: Array.from({ length: 30 }, (_, i) => ({
+    date: format(subDays(new Date(), 29 - i), 'yyyy-MM-dd'),
+    positive: Math.floor(Math.random() * 15) + 8,
+    negative: Math.floor(Math.random() * 3) + 1,
+    neutral: Math.floor(Math.random() * 5) + 2,
+    positivePercentage: (Math.random() * 15 + 65).toFixed(1)
+  })),
+  competitiveBreakdown: [
+    { brandName: 'Your Brand', brandType: 'own', sentimentGap: 0, averagePosition: 2.3, positivePercentage: 74.0, mentionCount: 385 },
+    { brandName: 'Competitor A', brandType: 'competitor', sentimentGap: -11.9, averagePosition: 1.8, positivePercentage: 62.1, mentionCount: 290 },
+    { brandName: 'Competitor B', brandType: 'competitor', sentimentGap: -5.0, averagePosition: 2.9, positivePercentage: 69.0, mentionCount: 210 },
+    { brandName: 'Competitor C', brandType: 'competitor', sentimentGap: -3.6, averagePosition: 3.5, positivePercentage: 70.4, mentionCount: 20 }
   ]
 };
 
@@ -510,20 +572,25 @@ export default function WorkspacePage({ params }) {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 opacity-75">
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Total Results</CardTitle>
+                <CardTitle className="text-sm font-medium">Brand Mentions</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{sampleData.summary.totalResults}</div>
-                <p className="text-xs text-muted-foreground">Model responses analyzed</p>
+                <div className="text-2xl font-bold">{sampleData.summary.resultsWithSentiment}</div>
+                <p className="text-xs text-muted-foreground">Times your brand was mentioned</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">With Sentiment</CardTitle>
+                <CardTitle className="text-sm font-medium">Positivity Score</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{sampleData.summary.resultsWithSentiment}</div>
-                <p className="text-xs text-muted-foreground">Responses with brand mentions</p>
+                <div className="text-2xl font-bold">
+                  {(() => {
+                    const ownBrandSentiment = sampleData.brandSentiments?.find(b => b.brandType === 'own');
+                    return ownBrandSentiment ? `${ownBrandSentiment.positivePercentage.toFixed(1)}%` : 'N/A';
+                  })()}
+                </div>
+                <p className="text-xs text-muted-foreground">Positive brand mentions</p>
               </CardContent>
             </Card>
             <Card>
@@ -531,18 +598,24 @@ export default function WorkspacePage({ params }) {
                 <CardTitle className="text-sm font-medium">Own Brand Share</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{sampleData.summary.ownBrandMentionPercentage.toFixed(1)}%</div>
+                <div className="text-2xl font-bold">
+                  {(() => {
+                    const ownBrandShare = sampleData.shareOfVoice?.find(b => b.brandType === 'own');
+                    return ownBrandShare ? `${ownBrandShare.percentage.toFixed(1)}%` : 'N/A';
+                  })()}
+                </div>
                 <p className="text-xs text-muted-foreground">Share of voice</p>
               </CardContent>
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Date Range</CardTitle>
+                <CardTitle className="text-sm font-medium">Exclusivity Rate</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-sm">
-                  {sampleData.summary.dateRange.start} to {sampleData.summary.dateRange.end}
+                <div className="text-2xl font-bold">
+                  {sampleData.summary.exclusivityRate ? `${sampleData.summary.exclusivityRate.toFixed(1)}%` : 'N/A'}
                 </div>
+                <p className="text-xs text-muted-foreground">Only your brand mentioned</p>
               </CardContent>
             </Card>
           </div>
@@ -556,7 +629,7 @@ export default function WorkspacePage({ params }) {
             <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
               <ChartContainer config={mockChartConfig} className="aspect-auto h-[300px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart
+                  <LineChart
                     data={areaChartData}
                     margin={{ top: 20, left: 12, right: 12 }}
                   >
@@ -575,17 +648,16 @@ export default function WorkspacePage({ params }) {
                     <Tooltip content={<ChartTooltipContent config={mockChartConfig} indicator="dot" />} />
                     <Legend />
                     {mockBrands.map((brand) => (
-                      <Area
+                      <Line
                         key={brand}
                         dataKey={brand}
-                        type="natural"
-                        fill={mockChartConfig[brand].color}
-                        fillOpacity={0.4}
+                        type="monotone"
                         stroke={mockChartConfig[brand].color}
-                        stackId="a"
+                        strokeWidth={2}
+                        dot={false}
                       />
                     ))}
-                  </AreaChart>
+                  </LineChart>
                 </ResponsiveContainer>
               </ChartContainer>
             </CardContent>
@@ -655,58 +727,282 @@ export default function WorkspacePage({ params }) {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 opacity-75">
+          {/* New Insights Row */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 opacity-75">
+            {/* Co-Mention Analysis */}
             <Card>
               <CardHeader>
-                <CardTitle>Mentions by Model</CardTitle>
-                <CardDescription>Which AI models are mentioning you.</CardDescription>
+                <CardTitle>Co-Mention Analysis</CardTitle>
+                <CardDescription>When your brand is mentioned, which competitors appear?</CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={sampleData.mentionsByModel} layout="vertical">
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="modelName"
-                      type="category"
+                <div className="space-y-4">
+                  {sampleData.coMentionAnalysis[0].coMentions.map((coMention, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{coMention.brandName}</span>
+                        <span className="text-muted-foreground">{coMention.percentage.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full transition-all"
+                          style={{
+                            width: `${coMention.percentage}%`,
+                            backgroundColor: chartConfig.competitor.color
+                          }}
+                        />
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {coMention.count} times co-mentioned
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Brand Position Analysis */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Brand Position in Response</CardTitle>
+                <CardDescription>Average position when brands are mentioned</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={250}>
+                  <BarChart data={sampleData.brandPositionAnalysis} layout="horizontal">
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="brandName"
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
+                      tickFormatter={(value) => value.slice(0, 10)}
                     />
-                    <Tooltip content={<ChartTooltipContent indicator="dashed" hideLabel config={chartConfig} />} />
-                    <Bar dataKey="mentionCount" fill={chartConfig.ownBrand.color} radius={4}>
-                      <LabelList dataKey="mentionCount" position="right" offset={8} className="fill-foreground" />
+                    <YAxis
+                      reversed
+                      domain={[0, 5]}
+                      tickLine={false}
+                      axisLine={false}
+                      label={{ value: 'Position (1=First)', angle: -90, position: 'insideLeft' }}
+                    />
+                    <Tooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="dashed" config={chartConfig} />}
+                    />
+                    <Bar
+                      dataKey="averagePosition"
+                      fill={chartConfig.ownBrand.color}
+                      radius={4}
+                    >
+                      {sampleData.brandPositionAnalysis.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.brandType === 'own' ? chartConfig.ownBrand.color : chartConfig.competitor.color}
+                        />
+                      ))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
             </Card>
+          </div>
 
-            <Card className="lg:col-span-2">
-              <CardHeader>
-                <CardTitle>Prompt Performance</CardTitle>
-                <CardDescription>Top prompts by mention wins for your brand vs. competitors.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={promptPerformanceData}>
+          {/* Sentiment Strength Over Time */}
+          <Card className="mb-6 opacity-75">
+            <CardHeader>
+              <CardTitle>Sentiment Strength Over Time</CardTitle>
+              <CardDescription>Track how positive sentiment changes for your brand</CardDescription>
+            </CardHeader>
+            <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+              <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={sampleData.sentimentTrend}
+                    margin={{ top: 20, left: 12, right: 12 }}
+                  >
                     <CartesianGrid vertical={false} />
                     <XAxis
-                      dataKey="prompt"
-                      tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
-                      angle={-45}
-                      textAnchor="end"
-                      height={70}
+                      dataKey="date"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tickFormatter={(value) => {
+                        const date = new Date(value);
+                        return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                      }}
                     />
-                    <YAxis />
-                    <Tooltip content={<ChartTooltipContent indicator="dashed" config={chartConfig} />} />
+                    <YAxis tickLine={false} axisLine={false} />
+                    <Tooltip
+                      cursor={false}
+                      content={<ChartTooltipContent config={chartConfig} indicator="dot" />}
+                    />
                     <Legend />
-                    <Bar dataKey="ownBrand" name="Your Brand Wins" fill={chartConfig.ownBrand.color} radius={4} />
-                    <Bar dataKey="competitor" name="Competitor Wins" fill={chartConfig.competitor.color} radius={4} />
-                  </BarChart>
+                    <Line
+                      dataKey="positive"
+                      name="Positive"
+                      type="monotone"
+                      stroke={chartConfig.positive.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      dataKey="negative"
+                      name="Negative"
+                      type="monotone"
+                      stroke={chartConfig.negative.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      dataKey="neutral"
+                      name="Neutral"
+                      type="monotone"
+                      stroke={chartConfig.notDetermined.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
-              </CardContent>
-            </Card>
-          </div>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+
+          {/* Competitive Breakdown Table */}
+          <Card className="mb-6 opacity-75">
+            <CardHeader>
+              <CardTitle>Competitive Breakdown</CardTitle>
+              <CardDescription>Compare sentiment gap and average position across all brands</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-medium text-sm">Brand</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Mentions</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Positivity %</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Sentiment Gap</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Avg Position</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sampleData.competitiveBreakdown.map((row, index) => (
+                      <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                        <td className="py-3 px-4 text-sm font-medium">
+                          {row.brandName}
+                          {row.brandType === 'own' && (
+                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${chartConfig.ownBrand.color}20`, color: chartConfig.ownBrand.color }}>
+                              You
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">{row.mentionCount}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {row.positivePercentage.toFixed(1)}%
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          <span style={{ color: row.sentimentGap >= 0 ? chartConfig.positive.color : chartConfig.negative.color }}>
+                            {row.sentimentGap >= 0 ? '+' : ''}{row.sentimentGap.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {row.averagePosition.toFixed(1)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Prompt Performance Table - Full Width at Bottom */}
+          <Card className="mb-6 opacity-75">
+            <CardHeader>
+              <CardTitle>Prompt Performance</CardTitle>
+              <CardDescription>Top prompts by mention wins for your brand vs. competitors.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-medium text-sm">Prompt</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Your Brand</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Competitors</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Total</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Win Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {promptPerformanceData.map((row, index) => {
+                      const total = row.ownBrand + row.competitor;
+                      const winRate = total > 0 ? ((row.ownBrand / total) * 100).toFixed(1) : '0.0';
+                      return (
+                        <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                          <td className="py-3 px-4 text-sm">{row.prompt}</td>
+                          <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.ownBrand.color }}>
+                            {row.ownBrand}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.competitor.color }}>
+                            {row.competitor}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right">
+                            {total}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right font-medium">
+                            {winRate}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Mentions by Model - Full Width Table at Bottom */}
+          <Card className="mb-6 opacity-75">
+            <CardHeader>
+              <CardTitle>Mentions by Model</CardTitle>
+              <CardDescription>Brand mention performance across AI models</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-medium text-sm">Model</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Your Brand</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Competitors</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Total</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Win Rate</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sampleData.mentionsByModel.map((model, index) => (
+                      <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                        <td className="py-3 px-4 text-sm font-medium">{model.modelName}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.ownBrand.color }}>
+                          {model.ownBrandMentions}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.competitor.color }}>
+                          {model.competitorMentions}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {model.totalMentions}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {model.ownBrandPercentage.toFixed(1)}%
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </Content.Container>
       </AccountLayout>
     );
@@ -845,20 +1141,25 @@ export default function WorkspacePage({ params }) {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Total Results</CardTitle>
+              <CardTitle className="text-sm font-medium">Brand Mentions</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.summary.totalResults}</div>
-              <p className="text-xs text-muted-foreground">Model responses analyzed</p>
+              <div className="text-2xl font-bold">{analyticsData.summary.resultsWithSentiment}</div>
+              <p className="text-xs text-muted-foreground">Times your brand was mentioned</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">With Sentiment</CardTitle>
+              <CardTitle className="text-sm font-medium">Positivity Score</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.summary.resultsWithSentiment}</div>
-              <p className="text-xs text-muted-foreground">Responses with brand mentions</p>
+              <div className="text-2xl font-bold">
+                {(() => {
+                  const ownBrandSentiment = analyticsData.brandSentiments?.find(b => b.brandType === 'own');
+                  return ownBrandSentiment ? `${ownBrandSentiment.positivePercentage.toFixed(1)}%` : 'N/A';
+                })()}
+              </div>
+              <p className="text-xs text-muted-foreground">Positive brand mentions</p>
             </CardContent>
           </Card>
           <Card>
@@ -866,18 +1167,24 @@ export default function WorkspacePage({ params }) {
               <CardTitle className="text-sm font-medium">Own Brand Share</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{analyticsData.summary.ownBrandMentionPercentage.toFixed(1)}%</div>
+              <div className="text-2xl font-bold">
+                {(() => {
+                  const ownBrandShare = analyticsData.shareOfVoice?.find(b => b.brandType === 'own');
+                  return ownBrandShare ? `${ownBrandShare.percentage.toFixed(1)}%` : 'N/A';
+                })()}
+              </div>
               <p className="text-xs text-muted-foreground">Share of voice</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Date Range</CardTitle>
+              <CardTitle className="text-sm font-medium">Exclusivity Rate</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-sm">
-                {analyticsData.summary.dateRange.start} to {analyticsData.summary.dateRange.end}
+              <div className="text-2xl font-bold">
+                {analyticsData.summary.exclusivityRate ? `${analyticsData.summary.exclusivityRate.toFixed(1)}%` : 'N/A'}
               </div>
+              <p className="text-xs text-muted-foreground">Only your brand mentioned</p>
             </CardContent>
           </Card>
         </div>
@@ -891,7 +1198,7 @@ export default function WorkspacePage({ params }) {
           <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
             <ChartContainer config={dynamicChartConfig} className="aspect-auto h-[300px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart
+                <LineChart
                   accessibilityLayer
                   data={areaChartData}
                   margin={{
@@ -932,17 +1239,16 @@ export default function WorkspacePage({ params }) {
                   />
                   <Legend />
                   {Object.keys(dynamicChartConfig).filter(key => !['ownBrand', 'competitor', 'positive', 'negative', 'notDetermined'].includes(key)).map((brand) => (
-                    <Area
+                    <Line
                       key={brand}
                       dataKey={brand}
-                      type="natural"
-                      fill={dynamicChartConfig[brand].color}
-                      fillOpacity={0.4}
+                      type="monotone"
                       stroke={dynamicChartConfig[brand].color}
-                      stackId="a"
+                      strokeWidth={2}
+                      dot={false}
                     />
                   ))}
-                </AreaChart>
+                </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
           </CardContent>
@@ -1045,76 +1351,288 @@ export default function WorkspacePage({ params }) {
           </Card>
         </div>
 
-        {/* New Row: LLM and Prompt Performance */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Mentions by Model</CardTitle>
-                    <CardDescription>Which AI models are mentioning you.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={analyticsData?.mentionsByModel?.map(m => ({ ...m, mentionCount: Number(m.mentionCount) }))} layout="vertical">
-                        <XAxis type="number" hide />
-                        <YAxis
-                            dataKey="modelName"
-                            type="category"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
+        {/* New Insights Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Co-Mention Analysis */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Co-Mention Analysis</CardTitle>
+              <CardDescription>When your brand is mentioned, which competitors appear?</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {analyticsData?.coMentionAnalysis?.[0]?.coMentions && analyticsData.coMentionAnalysis[0].coMentions.length > 0 ? (
+                <div className="space-y-4">
+                  {analyticsData.coMentionAnalysis[0].coMentions.map((coMention, index) => (
+                    <div key={index} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{coMention.brandName}</span>
+                        <span className="text-muted-foreground">{coMention.percentage.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-muted rounded-full h-2">
+                        <div
+                          className="h-2 rounded-full transition-all"
+                          style={{
+                            width: `${coMention.percentage}%`,
+                            backgroundColor: chartConfig.competitor.color
+                          }}
                         />
-                        <Tooltip
-                            cursor={false}
-                            content={
-                              <ChartTooltipContent
-                                indicator="dashed"
-                                hideLabel
-                                config={chartConfig}
-                              />
-                            }
-                        />
-                        <Bar dataKey="mentionCount" fill={chartConfig.ownBrand.color} radius={4}>
-                            <LabelList dataKey="mentionCount" position="right" offset={8} className="fill-foreground" />
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {coMention.count} times co-mentioned
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  No co-mention data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            <Card className="lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Prompt Performance</CardTitle>
-                    <CardDescription>Top prompts by mention wins for your brand vs. competitors.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <BarChart data={promptPerformanceData}>
-                        <CartesianGrid vertical={false} />
-                        <XAxis 
-                            dataKey="prompt" 
-                            tickFormatter={(value) => value.length > 15 ? `${value.substring(0, 15)}...` : value}
-                            angle={-45}
-                            textAnchor="end"
-                            height={70}
-                        />
-                        <YAxis />
-                        <Tooltip
-                            cursor={false}
-                            content={
-                              <ChartTooltipContent
-                                indicator="dashed"
-                                config={chartConfig}
-                              />
-                            }
-                        />
-                        <Legend />
-                        <Bar dataKey="ownBrand" name="Your Brand Wins" fill={chartConfig.ownBrand.color} radius={4} />
-                        <Bar dataKey="competitor" name="Competitor Wins" fill={chartConfig.competitor.color} radius={4} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                </CardContent>
-            </Card>
+          {/* Brand Position Analysis */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Brand Position in Response</CardTitle>
+              <CardDescription>Average position when brands are mentioned</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={analyticsData?.brandPositionAnalysis || []} layout="horizontal">
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="brandName"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 10)}
+                  />
+                  <YAxis
+                    reversed
+                    domain={[0, 5]}
+                    tickLine={false}
+                    axisLine={false}
+                    label={{ value: 'Position (1=First)', angle: -90, position: 'insideLeft' }}
+                  />
+                  <Tooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dashed" config={chartConfig} />}
+                  />
+                  <Bar
+                    dataKey="averagePosition"
+                    fill={chartConfig.ownBrand.color}
+                    radius={4}
+                  >
+                    {(analyticsData?.brandPositionAnalysis || []).map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.brandType === 'own' ? chartConfig.ownBrand.color : chartConfig.competitor.color}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Sentiment Strength Over Time */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Sentiment Strength Over Time</CardTitle>
+            <CardDescription>Track how positive sentiment changes for your brand</CardDescription>
+          </CardHeader>
+          <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+            <ChartContainer config={chartConfig} className="aspect-auto h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart
+                  data={analyticsData?.sentimentTrend || []}
+                  margin={{ top: 20, left: 12, right: 12 }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis
+                    dataKey="date"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => {
+                      const date = new Date(value);
+                      return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                    }}
+                  />
+                  <YAxis tickLine={false} axisLine={false} />
+                  <Tooltip
+                    cursor={false}
+                    content={<ChartTooltipContent config={chartConfig} indicator="dot" />}
+                  />
+                  <Legend />
+                  <Line
+                    dataKey="positive"
+                    name="Positive"
+                    type="monotone"
+                    stroke={chartConfig.positive.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    dataKey="negative"
+                    name="Negative"
+                    type="monotone"
+                    stroke={chartConfig.negative.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    dataKey="neutral"
+                    name="Neutral"
+                    type="monotone"
+                    stroke={chartConfig.notDetermined.color}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Competitive Breakdown Table */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Competitive Breakdown</CardTitle>
+            <CardDescription>Compare sentiment gap and average position across all brands</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-3 px-4 font-medium text-sm">Brand</th>
+                    <th className="text-right py-3 px-4 font-medium text-sm">Mentions</th>
+                    <th className="text-right py-3 px-4 font-medium text-sm">Positivity %</th>
+                    <th className="text-right py-3 px-4 font-medium text-sm">Sentiment Gap</th>
+                    <th className="text-right py-3 px-4 font-medium text-sm">Avg Position</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(analyticsData?.competitiveBreakdown || []).map((row, index) => (
+                    <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                      <td className="py-3 px-4 text-sm font-medium">
+                        {row.brandName}
+                        {row.brandType === 'own' && (
+                          <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${chartConfig.ownBrand.color}20`, color: chartConfig.ownBrand.color }}>
+                            You
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right">{row.mentionCount}</td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        {row.positivePercentage.toFixed(1)}%
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        <span style={{ color: row.sentimentGap >= 0 ? chartConfig.positive.color : chartConfig.negative.color }}>
+                          {row.sentimentGap >= 0 ? '+' : ''}{row.sentimentGap.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right">
+                        {row.averagePosition.toFixed(1)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Prompt Performance Table - Full Width at Bottom */}
+        <Card className="mb-6">
+            <CardHeader>
+                <CardTitle>Prompt Performance</CardTitle>
+                <CardDescription>Top prompts by mention wins for your brand vs. competitors.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-medium text-sm">Prompt</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Your Brand</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Competitors</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Total</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Win Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {promptPerformanceData.map((row, index) => {
+                        const total = row.ownBrand + row.competitor;
+                        const winRate = total > 0 ? ((row.ownBrand / total) * 100).toFixed(1) : '0.0';
+                        return (
+                          <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                            <td className="py-3 px-4 text-sm">{row.prompt}</td>
+                            <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.ownBrand.color }}>
+                              {row.ownBrand}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.competitor.color }}>
+                              {row.competitor}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-right">
+                              {total}
+                            </td>
+                            <td className="py-3 px-4 text-sm text-right font-medium">
+                              {winRate}%
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+            </CardContent>
+        </Card>
+
+        {/* Mentions by Model - Full Width Table at Bottom */}
+        <Card className="mb-6">
+            <CardHeader>
+                <CardTitle>Mentions by Model</CardTitle>
+                <CardDescription>Brand mention performance across AI models</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-medium text-sm">Model</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Your Brand</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Competitors</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Total</th>
+                        <th className="text-right py-3 px-4 font-medium text-sm">Win Rate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(analyticsData?.mentionsByModel || []).map((model, index) => (
+                        <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                          <td className="py-3 px-4 text-sm font-medium">{model.modelName}</td>
+                          <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.ownBrand.color }}>
+                            {model.ownBrandMentions}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right font-medium" style={{ color: chartConfig.competitor.color }}>
+                            {model.competitorMentions}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right">
+                            {model.totalMentions}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-right font-medium">
+                            {model.ownBrandPercentage.toFixed(1)}%
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+            </CardContent>
+        </Card>
 
       </Content.Container>
     </AccountLayout>
