@@ -1086,7 +1086,7 @@ export default function WorkspacePage({ params }) {
   console.log('areaChartData', areaChartData.slice(0,5));
   console.log('sentimentData', sentimentData);
   console.log('pieChartData', pieChartData);
-  console.log('mentionsByModel converted', analyticsData?.mentionsByModel?.map(m => ({ ...m, mentionCount: Number(m.mentionCount) })));
+  console.log('mentionsByModel', analyticsData?.mentionsByModel);
   console.log('promptPerformanceData', promptPerformanceData);
 
   return (
