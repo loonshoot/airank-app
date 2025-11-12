@@ -1088,6 +1088,8 @@ export default function WorkspacePage({ params }) {
   console.log('pieChartData', pieChartData);
   console.log('mentionsByModel', analyticsData?.mentionsByModel);
   console.log('promptPerformanceData', promptPerformanceData);
+  console.log('brandPositionAnalysis', analyticsData?.brandPositionAnalysis);
+  console.log('competitiveBreakdown', analyticsData?.competitiveBreakdown);
 
   return (
     <AccountLayout routerType="app">
