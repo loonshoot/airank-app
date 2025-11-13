@@ -1432,41 +1432,45 @@ export default function WorkspacePage({ params }) {
               <CardDescription>Average position when brands are mentioned</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={analyticsData?.brandPositionAnalysis || []} layout="horizontal">
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="brandName"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 10)}
-                  />
-                  <YAxis
-                    reversed
-                    domain={[0, 5]}
-                    tickLine={false}
-                    axisLine={false}
-                    label={{ value: 'Position (1=First)', angle: -90, position: 'insideLeft' }}
-                  />
-                  <Tooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dashed" config={chartConfig} />}
-                  />
-                  <Bar
-                    dataKey="averagePosition"
-                    fill={chartConfig.ownBrand.color}
-                    radius={4}
-                  >
-                    {(analyticsData?.brandPositionAnalysis || []).map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={entry.brandType === 'own' ? chartConfig.ownBrand.color : chartConfig.competitor.color}
-                      />
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-3 px-4 font-medium text-sm">Brand Name</th>
+                      <th className="text-center py-3 px-4 font-medium text-sm">Ranking</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Avg Position</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">First Mentions</th>
+                      <th className="text-right py-3 px-4 font-medium text-sm">Total Mentions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(analyticsData?.brandPositionAnalysis || []).map((row, index) => (
+                      <tr key={index} className="border-b border-border/50 hover:bg-muted/50">
+                        <td className="py-3 px-4 text-sm font-medium">
+                          {row.brandName}
+                          {row.brandType === 'own' && (
+                            <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: `${chartConfig.ownBrand.color}20`, color: chartConfig.ownBrand.color }}>
+                              You
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-center font-medium">
+                          {index === 0 ? '1st' : index === 1 ? '2nd' : index === 2 ? '3rd' : `${index + 1}th`}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {row.averagePosition.toFixed(1)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {row.firstMentions}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          {row.totalMentions}
+                        </td>
+                      </tr>
                     ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+                  </tbody>
+                </table>
+              </div>
             </CardContent>
           </Card>
         </div>
