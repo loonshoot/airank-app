@@ -632,7 +632,7 @@ export default function WorkspacePage({ params }) {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={areaChartData}
-                    margin={{ top: 20, left: 12, right: 12 }}
+                    margin={{ top: 20, left: 0, right: 20 }}
                   >
                     <CartesianGrid vertical={false} />
                     <XAxis
@@ -706,7 +706,7 @@ export default function WorkspacePage({ params }) {
               <CardContent>
                 <ChartContainer config={chartConfig} className="h-[250px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={sentimentData} margin={{ left: 12, right: 12 }}>
+                    <BarChart data={sentimentData} margin={{ left: 0, right: 20 }}>
                       <CartesianGrid vertical={false} />
                       <XAxis
                         dataKey="brand"
@@ -819,7 +819,7 @@ export default function WorkspacePage({ params }) {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={sampleData.sentimentTrend}
-                    margin={{ top: 20, left: 12, right: 12 }}
+                    margin={{ top: 20, left: 0, right: 20 }}
                   >
                     <CartesianGrid vertical={false} />
                     <XAxis
@@ -1214,8 +1214,8 @@ export default function WorkspacePage({ params }) {
                   data={areaChartData}
                   margin={{
                     top: 20,
-                    left: 12,
-                    right: 12,
+                    left: 0,
+                    right: 20,
                   }}
                 >
                   <CartesianGrid vertical={false} />
@@ -1482,7 +1482,7 @@ export default function WorkspacePage({ params }) {
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={analyticsData?.sentimentTrend || []}
-                  margin={{ top: 20, left: 12, right: 12 }}
+                  margin={{ top: 20, left: 0, right: 20 }}
                 >
                   <CartesianGrid vertical={false} />
                   <XAxis
