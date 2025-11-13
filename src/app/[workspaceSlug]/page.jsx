@@ -1085,11 +1085,6 @@ export default function WorkspacePage({ params }) {
 
   console.log('areaChartData', areaChartData.slice(0,5));
   console.log('sentimentData', sentimentData);
-  console.log('pieChartData', pieChartData);
-  console.log('mentionsByModel', analyticsData?.mentionsByModel);
-  console.log('promptPerformanceData', promptPerformanceData);
-  console.log('brandPositionAnalysis', analyticsData?.brandPositionAnalysis);
-  console.log('competitiveBreakdown', analyticsData?.competitiveBreakdown);
 
   return (
     <AccountLayout routerType="app">
