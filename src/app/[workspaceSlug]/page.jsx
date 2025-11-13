@@ -271,6 +271,7 @@ export default function WorkspacePage({ params }) {
     hasPrompts: false,
     hasData: false
   });
+  const [hiddenLines, setHiddenLines] = useState(new Set());
 
   // Check workspace configuration
   useEffect(() => {
@@ -1083,6 +1084,19 @@ export default function WorkspacePage({ params }) {
     fill: dynamicChartConfig[item.name]?.color || item.fill
   }));
 
+  // Toggle line visibility
+  const handleLegendClick = (brandName) => {
+    setHiddenLines(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(brandName)) {
+        newSet.delete(brandName);
+      } else {
+        newSet.add(brandName);
+      }
+      return newSet;
+    });
+  };
+
   console.log('areaChartData', areaChartData.slice(0,5));
   console.log('sentimentData', sentimentData);
 
@@ -1234,7 +1248,6 @@ export default function WorkspacePage({ params }) {
                       />
                     }
                   />
-                  <Legend />
                   {Object.keys(dynamicChartConfig).filter(key => !['ownBrand', 'competitor', 'positive', 'negative', 'notDetermined'].includes(key)).map((brand) => (
                     <Line
                       key={brand}
@@ -1243,11 +1256,35 @@ export default function WorkspacePage({ params }) {
                       stroke={dynamicChartConfig[brand].color}
                       strokeWidth={2}
                       dot={false}
+                      hide={hiddenLines.has(brand)}
                     />
                   ))}
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
+            <div className="flex flex-wrap gap-4 justify-center mt-4">
+              {Object.keys(dynamicChartConfig).filter(key => !['ownBrand', 'competitor', 'positive', 'negative', 'notDetermined'].includes(key)).map((brand) => (
+                <button
+                  key={brand}
+                  onClick={() => handleLegendClick(brand)}
+                  className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                  style={{
+                    opacity: hiddenLines.has(brand) ? 0.4 : 1
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: dynamicChartConfig[brand].color }}
+                  />
+                  <span className="text-sm font-medium">
+                    {dynamicChartConfig[brand].label || brand}
+                  </span>
+                  {hiddenLines.has(brand) && (
+                    <span className="text-xs text-muted-foreground">(hidden)</span>
+                  )}
+                </button>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
