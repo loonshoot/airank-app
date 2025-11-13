@@ -1439,8 +1439,6 @@ export default function WorkspacePage({ params }) {
                       <th className="text-left py-3 px-4 font-medium text-sm">Brand Name</th>
                       <th className="text-center py-3 px-4 font-medium text-sm">Ranking</th>
                       <th className="text-right py-3 px-4 font-medium text-sm">Avg Position</th>
-                      <th className="text-right py-3 px-4 font-medium text-sm">First Mentions</th>
-                      <th className="text-right py-3 px-4 font-medium text-sm">Total Mentions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1459,12 +1457,6 @@ export default function WorkspacePage({ params }) {
                         </td>
                         <td className="py-3 px-4 text-sm text-right font-medium">
                           {row.averagePosition.toFixed(1)}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-right">
-                          {row.firstMentions}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-right">
-                          {row.totalMentions}
                         </td>
                       </tr>
                     ))}
@@ -1569,9 +1561,13 @@ export default function WorkspacePage({ params }) {
                         {row.positivePercentage.toFixed(1)}%
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-medium">
-                        <span style={{ color: row.sentimentGap >= 0 ? chartConfig.positive.color : chartConfig.negative.color }}>
-                          {row.sentimentGap >= 0 ? '+' : ''}{row.sentimentGap.toFixed(1)}%
-                        </span>
+                        {row.brandType === 'own' ? (
+                          <span className="text-muted-foreground font-medium">BASELINE</span>
+                        ) : (
+                          <span style={{ color: row.sentimentGap >= 0 ? chartConfig.positive.color : chartConfig.negative.color }}>
+                            {row.sentimentGap >= 0 ? '+' : ''}{row.sentimentGap.toFixed(1)}%
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-sm text-right">
                         {row.averagePosition.toFixed(1)}
