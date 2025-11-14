@@ -272,6 +272,7 @@ export default function WorkspacePage({ params }) {
     hasData: false
   });
   const [hiddenLines, setHiddenLines] = useState(new Set());
+  const [hiddenSentiments, setHiddenSentiments] = useState(new Set());
 
   // Check workspace configuration
   useEffect(() => {
@@ -1097,6 +1098,19 @@ export default function WorkspacePage({ params }) {
     });
   };
 
+  // Toggle sentiment visibility
+  const handleSentimentToggle = (sentimentType) => {
+    setHiddenSentiments(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sentimentType)) {
+        newSet.delete(sentimentType);
+      } else {
+        newSet.add(sentimentType);
+      }
+      return newSet;
+    });
+  };
+
   console.log('areaChartData', areaChartData.slice(0,5));
   console.log('sentimentData', sentimentData);
 
@@ -1374,13 +1388,62 @@ export default function WorkspacePage({ params }) {
                       cursor={false}
                       content={<ChartTooltipContent indicator="dashed" config={chartConfig} />}
                     />
-                    <Legend />
-                    <Bar dataKey="positive" fill={chartConfig.positive.color} radius={4} />
-                    <Bar dataKey="negative" fill={chartConfig.negative.color} radius={4} />
-                    <Bar dataKey="notDetermined" fill={chartConfig.notDetermined.color} radius={4} />
+                    {!hiddenSentiments.has('positive') && <Bar dataKey="positive" fill={chartConfig.positive.color} radius={4} />}
+                    {!hiddenSentiments.has('negative') && <Bar dataKey="negative" fill={chartConfig.negative.color} radius={4} />}
+                    {!hiddenSentiments.has('neutral') && <Bar dataKey="notDetermined" fill={chartConfig.notDetermined.color} radius={4} />}
                   </BarChart>
                 </ResponsiveContainer>
               </ChartContainer>
+              <div className="flex flex-wrap gap-4 justify-center mt-4">
+                <button
+                  onClick={() => handleSentimentToggle('positive')}
+                  className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                  style={{
+                    opacity: hiddenSentiments.has('positive') ? 0.4 : 1
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: chartConfig.positive.color }}
+                  />
+                  <span className="text-sm font-medium">Positive</span>
+                  {hiddenSentiments.has('positive') && (
+                    <span className="text-xs text-muted-foreground">(hidden)</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSentimentToggle('negative')}
+                  className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                  style={{
+                    opacity: hiddenSentiments.has('negative') ? 0.4 : 1
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: chartConfig.negative.color }}
+                  />
+                  <span className="text-sm font-medium">Negative</span>
+                  {hiddenSentiments.has('negative') && (
+                    <span className="text-xs text-muted-foreground">(hidden)</span>
+                  )}
+                </button>
+                <button
+                  onClick={() => handleSentimentToggle('neutral')}
+                  className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                  style={{
+                    opacity: hiddenSentiments.has('neutral') ? 0.4 : 1
+                  }}
+                >
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: chartConfig.notDetermined.color }}
+                  />
+                  <span className="text-sm font-medium">Neutral</span>
+                  {hiddenSentiments.has('neutral') && (
+                    <span className="text-xs text-muted-foreground">(hidden)</span>
+                  )}
+                </button>
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -1496,34 +1559,89 @@ export default function WorkspacePage({ params }) {
                     cursor={false}
                     content={<ChartTooltipContent config={chartConfig} indicator="dot" />}
                   />
-                  <Legend />
-                  <Line
-                    dataKey="positive"
-                    name="Positive"
-                    type="monotone"
-                    stroke={chartConfig.positive.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    dataKey="negative"
-                    name="Negative"
-                    type="monotone"
-                    stroke={chartConfig.negative.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
-                  <Line
-                    dataKey="neutral"
-                    name="Neutral"
-                    type="monotone"
-                    stroke={chartConfig.notDetermined.color}
-                    strokeWidth={2}
-                    dot={false}
-                  />
+                  {!hiddenSentiments.has('positive') && (
+                    <Line
+                      dataKey="positive"
+                      name="Positive"
+                      type="monotone"
+                      stroke={chartConfig.positive.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
+                  {!hiddenSentiments.has('negative') && (
+                    <Line
+                      dataKey="negative"
+                      name="Negative"
+                      type="monotone"
+                      stroke={chartConfig.negative.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
+                  {!hiddenSentiments.has('neutral') && (
+                    <Line
+                      dataKey="neutral"
+                      name="Neutral"
+                      type="monotone"
+                      stroke={chartConfig.notDetermined.color}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  )}
                 </LineChart>
               </ResponsiveContainer>
             </ChartContainer>
+            <div className="flex flex-wrap gap-4 justify-center mt-4">
+              <button
+                onClick={() => handleSentimentToggle('positive')}
+                className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                style={{
+                  opacity: hiddenSentiments.has('positive') ? 0.4 : 1
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: chartConfig.positive.color }}
+                />
+                <span className="text-sm font-medium">Positive</span>
+                {hiddenSentiments.has('positive') && (
+                  <span className="text-xs text-muted-foreground">(hidden)</span>
+                )}
+              </button>
+              <button
+                onClick={() => handleSentimentToggle('negative')}
+                className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                style={{
+                  opacity: hiddenSentiments.has('negative') ? 0.4 : 1
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: chartConfig.negative.color }}
+                />
+                <span className="text-sm font-medium">Negative</span>
+                {hiddenSentiments.has('negative') && (
+                  <span className="text-xs text-muted-foreground">(hidden)</span>
+                )}
+              </button>
+              <button
+                onClick={() => handleSentimentToggle('neutral')}
+                className="flex items-center gap-2 px-3 py-1 rounded-md hover:bg-muted/50 transition-colors cursor-pointer"
+                style={{
+                  opacity: hiddenSentiments.has('neutral') ? 0.4 : 1
+                }}
+              >
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: chartConfig.notDetermined.color }}
+                />
+                <span className="text-sm font-medium">Neutral</span>
+                {hiddenSentiments.has('neutral') && (
+                  <span className="text-xs text-muted-foreground">(hidden)</span>
+                )}
+              </button>
+            </div>
           </CardContent>
         </Card>
 
