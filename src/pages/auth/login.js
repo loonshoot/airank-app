@@ -3,8 +3,7 @@ import Link from 'next/link';
 import { getProviders, signIn, useSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import isEmail from 'validator/lib/isEmail';
-import Image from 'next/image'
-
+import Image from 'next/image';
 
 import Button from '@/components/Button/index';
 import Meta from '@/components/Meta/index';
@@ -60,12 +59,13 @@ const Login = () => {
         description="Login to your AI Rank project"
       />
       <div className="flex flex-col items-center justify-center p-5 m-auto space-y-5 rounded-lg shadow-2xl md:p-10 md:w-1/3 bg-card border border-border">
-        <div>
+        <div className="w-[160px]">
           <Image
             src="/images/logo-light.svg"
-            width={188}
-            height={63}
             alt="AI Rank logo"
+            width={240}
+            height={180}
+            className=""
           />
         </div>
         <div className="text-center">
