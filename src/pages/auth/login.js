@@ -63,8 +63,8 @@ const Login = () => {
         <div>
           <Image
             src="/images/logo-light.svg"
-            width={150}
-            height={50}
+            width={188}
+            height={63}
             alt="AI Rank logo"
           />
         </div>
