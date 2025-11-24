@@ -57,8 +57,8 @@ const Sidebar = ({ menu, routerType }) => {
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
             src="/images/logo-light.svg"
-            width={160}
-            height={160}
+            width={105}
+            height={40}
             alt="AI Rank logo"
             priority
           />
@@ -86,8 +86,8 @@ const Sidebar = ({ menu, routerType }) => {
             <Link href="/" className="flex-grow text-2xl font-bold">
               <Image
                 src="/images/logo-light.svg"
-                width={160}
-                height={160}
+                width={105}
+                height={40}
                 alt="AI Rank logo"
                 priority
               />

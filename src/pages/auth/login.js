@@ -59,13 +59,12 @@ const Login = () => {
         description="Login to your AI Rank project"
       />
       <div className="flex flex-col items-center justify-center p-5 m-auto space-y-5 rounded-lg shadow-2xl md:p-10 md:w-1/3 bg-card border border-border">
-        <div className="w-[160px]">
+        <div className="flex justify-center w-full">
           <Image
             src="/images/logo-light.svg"
             alt="AI Rank logo"
-            width={240}
-            height={180}
-            className=""
+            width={105}
+            height={40}
           />
         </div>
         <div className="text-center">
