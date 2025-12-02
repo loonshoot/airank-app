@@ -1,69 +1,114 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGraphQLClient } from '@/hooks/data/index';
 import { GET_ALL_WORKSPACES, executeQuery } from '@/graphql/operations';
 import useGlobalLoading from '@/hooks/useGlobalLoading';
 
+const CACHE_KEY = 'airank_workspaces_cache';
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// Helper to get cached workspaces from sessionStorage
+const getCachedWorkspaces = () => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (!cached) return null;
+    const { workspaces, timestamp } = JSON.parse(cached);
+    // Check if cache is still valid
+    if (Date.now() - timestamp < CACHE_TTL) {
+      return workspaces;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+// Helper to set cached workspaces
+const setCachedWorkspaces = (workspaces) => {
+  if (typeof window === 'undefined') return;
+  try {
+    sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+      workspaces,
+      timestamp: Date.now()
+    }));
+  } catch {
+    // Ignore storage errors
+  }
+};
+
 const useWorkspaces = () => {
+  // Always start with empty/loading state to match SSR
+  // Cache is applied after hydration to avoid mismatch
   const [workspaces, setWorkspaces] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isError, setIsError] = useState(null);
   const [hasHydrated, setHasHydrated] = useState(false);
-  
+  const hasFetchedRef = useRef(false);
+  const hasAppliedCacheRef = useRef(false);
+
   // Get the shared GraphQL client
   const graphqlClient = useGraphQLClient();
 
-  // Connect to global loading state
-  useGlobalLoading(isLoading, 'workspaces');
+  // Connect to global loading state - only when truly loading (no cache)
+  useGlobalLoading(isLoading && workspaces.length === 0, 'workspaces');
 
-  // Mark component as hydrated
+  // Apply cache after hydration to avoid SSR mismatch
   useEffect(() => {
+    if (!hasAppliedCacheRef.current) {
+      hasAppliedCacheRef.current = true;
+      const cached = getCachedWorkspaces();
+      if (cached && cached.length > 0) {
+        setWorkspaces(cached);
+        setIsLoading(false);
+      }
+    }
     setHasHydrated(true);
   }, []);
 
   // Fetch workspaces data on mount
   useEffect(() => {
-    const fetchWorkspaces = async () => {
+    const fetchWorkspaces = async (isBackgroundRefresh = false) => {
       if (!hasHydrated || !graphqlClient) {
-        console.log("Skipping fetch: not hydrated or no client", { hasHydrated, hasClient: !!graphqlClient });
         return;
       }
-      
-      console.log("Fetching workspaces...");
-      setIsLoading(true);
-      
+
+      // Don't show loading state for background refreshes if we have cached data
+      if (!isBackgroundRefresh || workspaces.length === 0) {
+        setIsLoading(true);
+      }
+
       try {
-        // Execute the GraphQL query
-        console.log("Executing GraphQL query for workspaces...");
         const workspacesResult = await executeQuery(
-          graphqlClient, 
+          graphqlClient,
           GET_ALL_WORKSPACES
         );
-        
-        console.log("GraphQL result:", workspacesResult);
-        
+
         if (workspacesResult.data) {
-          console.log("Workspaces data received:", workspacesResult.data.workspaces);
-          setWorkspaces(workspacesResult.data.workspaces || []);
+          const newWorkspaces = workspacesResult.data.workspaces || [];
+          setWorkspaces(newWorkspaces);
+          setCachedWorkspaces(newWorkspaces);
           setIsError(null);
         } else if (workspacesResult.error) {
           console.error("Error fetching workspaces:", workspacesResult.error);
-          console.error("Error details:", JSON.stringify(workspacesResult.error, null, 2));
           setIsError(workspacesResult.error);
         }
       } catch (error) {
         console.error("GraphQL workspaces query failure:", error);
-        console.error("Error stack:", error.stack);
         setIsError(error);
       } finally {
         setIsLoading(false);
+        hasFetchedRef.current = true;
       }
     };
-    
-    fetchWorkspaces();
-    
-    // Set up a refresh interval (every 60 seconds)
-    const intervalId = setInterval(fetchWorkspaces, 60000);
-    
+
+    // Initial fetch
+    if (!hasFetchedRef.current) {
+      fetchWorkspaces(false);
+    }
+
+    // Set up a background refresh interval (every 60 seconds)
+    const intervalId = setInterval(() => fetchWorkspaces(true), 60000);
+
     return () => clearInterval(intervalId);
   }, [hasHydrated, graphqlClient]);
 

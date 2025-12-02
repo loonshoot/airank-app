@@ -1,32 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 
 import Actions from './actions';
 import Menu from './menu';
-import sidebarMenu from '@/config/menu/sidebar-static';
-import { useWorkspaces } from '@/hooks/data';
-import { useWorkspace } from '@/providers/workspace';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image'
-
-const staticMenu = sidebarMenu();
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-const Sidebar = ({ menu, routerType }) => {
+const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
   const [showMenu, setMenuVisibility] = useState(false);
-  const { data, isLoading } = useWorkspaces();
-  const { workspace } = useWorkspace();
-  const [isAccountPage, setIsAccountPage] = useState(false);
 
-  // Check if we're on the account page
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    const pathSegments = window.location.pathname.split('/').filter(segment => segment !== '');
-    setIsAccountPage(pathSegments[0] === 'account' || pathSegments.length === 0);
-  }, []);
+  // Memoize menu to prevent unnecessary re-renders
+  const memoizedMenu = useMemo(() => menu, [menu]);
 
   const renderMenu = () => {
     // Don't render menu items on the account page
@@ -34,18 +21,21 @@ const Sidebar = ({ menu, routerType }) => {
       return null;
     }
 
-    return (
-      workspace &&
-      menu.map((item, index) => (
-        <Menu
-          key={index}
-          data={item}
-          isLoading={isLoading}
-          showMenu={data?.workspaces.length > 0 || isLoading}
-          routerType={routerType}
-        />
-      ))
-    );
+    // Render menu immediately if we have a workspace slug from URL
+    // Don't wait for workspace context - the menu prop already has the slug
+    if (!memoizedMenu || memoizedMenu.length === 0) {
+      return null;
+    }
+
+    return memoizedMenu.map((item, index) => (
+      <Menu
+        key={index}
+        data={item}
+        isLoading={false}
+        showMenu={true}
+        routerType={routerType}
+      />
+    ));
   };
 
   const toggleMenu = () => setMenuVisibility(!showMenu);
@@ -96,7 +86,7 @@ const Sidebar = ({ menu, routerType }) => {
 
           {/* Menu Content */}
           <div className="flex-1 flex flex-col space-y-5 p-5">
-            <Actions routerType={routerType} />
+            <Actions routerType={routerType} isAccountPage={isAccountPage} />
             {!isAccountPage && (
               <div className="flex flex-col space-y-10">
                 {renderMenu()}

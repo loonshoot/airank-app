@@ -34,7 +34,7 @@ export default function AccountPage() {
   const graphqlClient = useGraphQLClient();
   const [workspaces, setWorkspaces] = useState([]);
   // const [invitations, setInvitations] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start true to show loading state
 
   // Mark component as hydrated
   useEffect(() => {
@@ -197,7 +197,7 @@ export default function AccountPage() {
   */
 
   return (
-    <AccountLayout routerType="app">
+    <AccountLayout routerType="app" isAccountPage={true}>
       <Meta title="AI Rank - Dashboard" />
       <Content.Title
         title={t('workspace.dashboard.header.title')}
@@ -207,10 +207,22 @@ export default function AccountPage() {
       <Content.Container>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
           {isLoading ? (
-            <Card>
-              <Card.Body />
-              <Card.Footer />
-            </Card>
+            // Pulsating skeleton cards while loading
+            <>
+              {[1, 2, 3].map((i) => (
+                <Card key={i}>
+                  <Card.Body>
+                    <div className="animate-pulse">
+                      <div className="h-5 bg-zinc-700 rounded w-3/4 mb-4" />
+                      <div className="h-4 bg-zinc-700/50 rounded w-1/2" />
+                    </div>
+                  </Card.Body>
+                  <Card.Footer>
+                    <div className="h-4 bg-zinc-700/50 rounded w-32 animate-pulse" />
+                  </Card.Footer>
+                </Card>
+              ))}
+            </>
           ) : workspaces.length > 0 ? (
             workspaces.map((workspace, index) => (
               <Card key={index}>

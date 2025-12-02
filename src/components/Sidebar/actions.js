@@ -19,8 +19,10 @@ import { CREATE_WORKSPACE, executeMutation } from '@/graphql/operations';
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
 
-const Actions = ({ routerType }) => {
+const Actions = ({ routerType, isAccountPage = false }) => {
   const { t } = useTranslation();
+
+  // Workspaces hook - data used on non-account pages for selector
   const { data, workspaces, isLoading } = useWorkspaces();
   const { workspace, setWorkspace } = useWorkspace();
   const { router } = useRouterContext();
@@ -28,51 +30,37 @@ const Actions = ({ routerType }) => {
   const [name, setName] = useState('');
   const [showModal, setModalState] = useState(false);
   const validName = name.length > 0 && name.length <= 16;
-  const [isAccountPage, setIsAccountPage] = useState(false);
   const graphqlClient = useGraphQLClient();
   // Use a ref to track if we've already set the workspace
   const hasSetWorkspaceRef = useRef(false);
   const previousSlugRef = useRef(null);
 
-  // Check if we're on the account page
-  useEffect(() => {
-    if (!isBrowser) return;
-    
-    const pathSegments = window.location.pathname.split('/').filter(segment => segment !== '');
-    const isOnAccountPage = pathSegments[0] === 'account' || pathSegments.length === 0;
-    setIsAccountPage(isOnAccountPage);
-  }, []);
-
   // For non-account pages, find workspace from URL path - with safeguards against infinite renders
   useEffect(() => {
+    // Skip entirely for account pages
+    if (isAccountPage) return;
     if (!isBrowser || !workspaces || workspaces.length === 0) return;
-    
+
     const pathSegments = window.location.pathname.split('/').filter(segment => segment !== '');
     const firstFolder = pathSegments[0];
-    
-    // Skip for account page - don't auto-select
-    if (firstFolder === 'account' || pathSegments.length === 0) {
-      return;
-    }
-    
+
     // Don't set workspace if it's the same slug as before to prevent unnecessary re-renders
     if (firstFolder === previousSlugRef.current) {
       return;
     }
-    
-    // For non-account pages, set workspace based on URL slug
+
+    // Set workspace based on URL slug
     if (firstFolder) {
       const matchingWorkspace = workspaces.find(ws => ws.slug === firstFolder);
       if (matchingWorkspace) {
         // Only update if the workspace actually changed
         if (!workspace || workspace.slug !== matchingWorkspace.slug) {
-          console.log("Actions setting workspace:", matchingWorkspace.name);
           setWorkspace(matchingWorkspace);
           previousSlugRef.current = firstFolder;
         }
       }
     }
-  }, [workspaces, setWorkspace, workspace]);
+  }, [workspaces, setWorkspace, workspace, isAccountPage]);
 
   const createWorkspace = async (event) => {
     event.preventDefault();
@@ -120,16 +108,23 @@ const Actions = ({ routerType }) => {
 
   const toggleModal = () => setModalState(!showModal);
 
-  // Only render loading state if no workspaces have been loaded previously
-  // But always render on account pages since they don't depend on workspace data
-  if (isLoading && !workspaces?.length && !isAccountPage) {
-    return null; // Return nothing while initial loading
-  }
+  // Show pulsing skeleton while loading (no cached data)
+  const showSkeleton = isLoading && !workspaces?.length && !isAccountPage;
 
   return (
     <div className="flex flex-col items-stretch justify-center space-y-3">
+      {/* Skeleton loader - same dimensions as select box */}
+      {showSkeleton && (
+        <div className="relative w-full py-2 pl-3 pr-10 bg-zinc-800/50 border border-zinc-800/50 rounded-lg animate-pulse">
+          <div className="h-5 bg-zinc-700 rounded w-24" />
+          <span className="absolute inset-y-0 right-0 flex items-center pr-2">
+            <ChevronUpDownIcon className="w-5 h-5 text-zinc-600" aria-hidden="true" />
+          </span>
+        </div>
+      )}
+
       {/* Create workspace button - always show on account page or when no workspaces exist */}
-      {(isAccountPage || !workspaces || workspaces.length === 0) && (
+      {!showSkeleton && (isAccountPage || !workspaces || workspaces.length === 0) && (
         <Button
           background="Pink"
           border="Dark"
@@ -140,7 +135,7 @@ const Actions = ({ routerType }) => {
           <span>{t('workspace.action.button.label')}</span>
         </Button>
       )}
-      
+
       {/* Create workspace modal */}
       <Modal show={showModal} title={t("workspace.action.create.title")} toggle={toggleModal}>
         <div className="space-y-2 text-sm text-gray-400">
@@ -181,7 +176,7 @@ const Actions = ({ routerType }) => {
       </Modal>
       
       {/* Show workspace selector if workspaces exist and not on account page */}
-      {workspaces && workspaces.length > 0 && !isAccountPage && (
+      {!showSkeleton && workspaces && workspaces.length > 0 && !isAccountPage && (
         <Listbox value={workspace} onChange={handleWorkspaceChange}>
           <div className="relative">
             <Listbox.Button className="relative w-full py-2 pl-3 pr-10 text-left bg-[#0a0a0a] border border-zinc-800/50 rounded-lg cursor-default hover:border-green-600/30 transition-colors">

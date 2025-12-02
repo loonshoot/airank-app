@@ -1,5 +1,5 @@
 @import 'react-querybuilder/dist/query-builder-layout.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Font is loaded via next/font in layout.js - removed duplicate Google Fonts import */
 
 @tailwind base;
 @tailwind components;
@@ -69,7 +69,7 @@
 
   html,
   body {
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-inter), 'Inter', sans-serif;
     font-weight: 400;
     @apply bg-background text-foreground antialiased;
   }

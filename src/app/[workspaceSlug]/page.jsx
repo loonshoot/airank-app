@@ -26,8 +26,8 @@ import {
   Bar,
   ResponsiveContainer,
   Sector,
-  Legend,
-  Tooltip
+  Tooltip,
+  Legend
 } from 'recharts';
 import { CalendarIcon } from '@heroicons/react/24/outline';
 import { format, subDays, addDays, startOfMonth, endOfMonth, subMonths } from 'date-fns';

@@ -10,7 +10,7 @@ import menu from '@/config/menu/index';
 import { useWorkspace } from '@/providers/workspace';
 import { useRouterContext } from '@/providers/router';
 
-const AccountLayout = ({ children, routerType }) => {
+const AccountLayout = ({ children, routerType, isAccountPage = false }) => {
   const { status } = useSession();
   const { router } = useRouterContext();
   const { workspace } = useWorkspace();
@@ -24,7 +24,7 @@ const AccountLayout = ({ children, routerType }) => {
   if (status === 'loading') return <></>;
   return (
     <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
-      <Sidebar menu={menu(workspace?.slug)} routerType={routerType} />
+      <Sidebar menu={menu(workspace?.slug)} routerType={routerType} isAccountPage={isAccountPage} />
       <Content>
         <Header routerType={routerType} />
         <SetupBanner />
