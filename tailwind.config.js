@@ -104,7 +104,10 @@ module.exports = {
         600: '#FE0170',
       },
         'green': {
-          600: '#16a34a', // Match airank-website green
+          400: '#6BF947',
+          500: '#51F72B',
+          600: '#51F72B', // Match airank-website green
+          950: 'rgba(81, 247, 43, 0.1)',
         },
       'yellow': {
         400: '#FFC403',
