@@ -19,7 +19,7 @@ const AuthLayout = ({ children }) => {
 
   if (status === 'loading') return <></>;
   return (
-    <main className="relative flex flex-col items-center justify-center h-screen p-10 space-y-10 bg-dark">
+    <main className="relative min-h-screen bg-black">
       <Toaster position="bottom-center" toastOptions={{ duration: 10000 }} />
       {children}
     </main>

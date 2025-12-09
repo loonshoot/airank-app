@@ -7,16 +7,23 @@ import TopBarProgress from 'react-topbar-progress-indicator';
 import { SWRConfig } from 'swr';
 import i18n from "i18next";
 import { useTranslation, initReactI18next } from "react-i18next";
-import { Fira_Code } from 'next/font/google'
+import { Inter, Fira_Code } from 'next/font/google'
 import progressBarConfig from '@/config/progress-bar/index';
 import swrConfig from '@/config/swr/index';
 import WorkspaceProvider from '@/providers/workspace';
 import { ApolloProvider } from '@apollo/client'
 import { useApollo } from '@/lib/client/apollo'
 
-const fira = Fira_Code({ 
+const inter = Inter({
   subsets: ['latin'],
-  display: 'swap' 
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+const firaCode = Fira_Code({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-fira-code',
 })
 
 import '@/styles/globals.css';
@@ -71,7 +78,10 @@ const App = ({ Component, pageProps }) => {
     <SessionProvider session={pageProps.session}>
         <style jsx global>{`
           html {
-            font-family: ${fira.style.fontFamily};
+            font-family: ${inter.style.fontFamily}, sans-serif;
+          }
+          code, pre, .font-mono {
+            font-family: ${firaCode.style.fontFamily}, monospace;
           }
         `}</style>
         <SWRConfig value={swrOptions}>
