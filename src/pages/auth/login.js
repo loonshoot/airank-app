@@ -179,9 +179,9 @@ const Login = () => {
                 )}
                 <p className="mt-8 text-center text-sm text-gray-500">
                   By continuing, you agree to our{' '}
-                  <a href="/terms" className="text-green-500 hover:text-green-400 transition-colors">Terms of Service</a>
+                  <a href="https://getairank.com/terms/" className="text-green-500 hover:text-green-400 transition-colors">Terms of Service</a>
                   {' '}and{' '}
-                  <a href="/privacy" className="text-green-500 hover:text-green-400 transition-colors">Privacy Policy</a>
+                  <a href="https://getairank.com/privacy/" className="text-green-500 hover:text-green-400 transition-colors">Privacy Policy</a>
                 </p>
               </>
             ) : (
