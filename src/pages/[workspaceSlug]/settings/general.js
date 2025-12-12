@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { gql } from '@apollo/client';
 import { initializeApollo, addApolloState } from "@/lib/client/apollo";
 import { useWorkspace } from '@/providers/workspace';
+import { useRouter } from 'next/router';
 
 import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
@@ -13,7 +14,6 @@ import { getWorkspace } from '@/prisma/services/workspace';
 import TabNavigation from '@/components/TabNavigation';
 
 import WorkspaceTab from './components/WorkspaceTab';
-import TeamTab from './components/TeamTab';
 import BillingTab from './components/BillingTab';
 
 const sourcesQuery = gql`
@@ -31,15 +31,25 @@ const General = ({ workspace: serverWorkspace, sources, token }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('general');
   const { workspace: contextWorkspace } = useWorkspace();
+  const router = useRouter();
 
   // Use server workspace if available, otherwise fall back to context workspace
   const workspace = serverWorkspace || contextWorkspace;
 
   const tabs = [
     { id: 'general', label: t("common.label.workspace") || "Workspace" },
-    { id: 'team', label: t("settings.team.management") || "Team" },
+    { id: 'team', label: t("settings.team.management") || "Team", href: `/${workspace?.slug}/settings/team` },
     { id: 'billing', label: t("settings.workspace.billing") || "Billing" }
   ];
+
+  // Handle tab selection - redirect to team page if team tab is selected
+  const handleTabChange = (tabId) => {
+    if (tabId === 'team' && workspace?.slug) {
+      router.push(`/${workspace.slug}/settings/team`);
+    } else {
+      setActiveTab(tabId);
+    }
+  };
 
   return (
     <AccountLayout>
@@ -50,7 +60,7 @@ const General = ({ workspace: serverWorkspace, sources, token }) => {
       />
       <Content.Divider />
       <Content.Container>
-        <TabNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
+        <TabNavigation tabs={tabs} activeTab={activeTab} setActiveTab={handleTabChange} />
 
         {!workspace ? (
           <div className="text-center py-8">
@@ -62,7 +72,6 @@ const General = ({ workspace: serverWorkspace, sources, token }) => {
         ) : (
           <>
             {activeTab === 'general' && <WorkspaceTab workspace={workspace} />}
-            {activeTab === 'team' && <TeamTab workspace={workspace} />}
             {activeTab === 'billing' && <BillingTab />}
           </>
         )}

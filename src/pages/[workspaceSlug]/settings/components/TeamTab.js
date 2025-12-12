@@ -1,25 +1,25 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import {
-  DocumentDuplicateIcon,
   EllipsisVerticalIcon,
   XMarkIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
-import { CopyToClipboard } from 'react-copy-to-clipboard';
 import toast from 'react-hot-toast';
 import isEmail from 'validator/lib/isEmail';
-import { useMutation, useQuery } from '@apollo/client';
 
 import Button from '@/components/Button/index';
 import Card from '@/components/Card/index';
 import Modal from '@/components/Modal/index';
 import { useTranslation } from "react-i18next";
+import { useGraphQLClient } from '@/hooks/data/index';
 import {
   QUERY_MEMBERS,
   CREATE_MEMBER,
   UPDATE_MEMBER,
-  DELETE_MEMBER
+  DELETE_MEMBER,
+  executeQuery,
+  executeMutation
 } from '@/graphql/operations';
 
 // Status constants (matching Prisma enum)
@@ -303,11 +303,14 @@ const TeamTab = ({ workspace = {} }) => {
   const { t } = useTranslation();
 
   // GraphQL query for members
-  const { data: membersData, loading: isMembersLoading, refetch: refetchMembers } = useQuery(QUERY_MEMBERS, {
+  const { data: membersData, loading: isMembersLoading, error: membersError, refetch: refetchMembers } = useQuery(QUERY_MEMBERS, {
     variables: { workspaceSlug: workspace?.slug },
     skip: !workspace?.slug,
     fetchPolicy: 'network-only'
   });
+
+  // Debug logging
+  console.log('TeamTab - workspace:', workspace?.slug, 'membersData:', membersData, 'error:', membersError);
 
   // GraphQL mutations
   const [createMemberMutation] = useMutation(CREATE_MEMBER);
@@ -339,8 +342,6 @@ const TeamTab = ({ workspace = {} }) => {
   const hasCreateMemberPermission = currentUserMember?.permissions?.includes('mutation:createMember');
   const hasUpdateMemberPermission = currentUserMember?.permissions?.includes('mutation:updateMember');
   const hasDeleteMemberPermission = currentUserMember?.permissions?.includes('mutation:deleteMember');
-
-  const copyToClipboard = () => toast.success('Copied to clipboard!');
 
   const addEmail = () => {
     members.push({ ...MEMBERS_TEMPLATE });
@@ -457,24 +458,6 @@ const TeamTab = ({ workspace = {} }) => {
 
   return (
     <>
-      {/* Invite Link Card */}
-      <Card>
-        <Card.Body
-          title={t("settings.team.invite.link")}
-          subtitle={t("settings.team.invite.link.description")}
-        >
-          <div className="flex items-center justify-between px-3 py-2 space-x-5 font-mono text-sm border border-zinc-800 rounded bg-zinc-900/50">
-            <span className="overflow-x-auto text-gray-300">{workspace.inviteLink}</span>
-            <CopyToClipboard
-              onCopy={copyToClipboard}
-              text={workspace.inviteLink}
-            >
-              <DocumentDuplicateIcon className="w-5 h-5 cursor-pointer hover:text-pink-500 transition-colors flex-shrink-0" />
-            </CopyToClipboard>
-          </div>
-        </Card.Body>
-      </Card>
-
       {/* Add New Members Card */}
       {hasCreateMemberPermission && (
         <Card>
@@ -552,7 +535,26 @@ const TeamTab = ({ workspace = {} }) => {
                 </tr>
               </thead>
               <tbody className="text-sm divide-y divide-zinc-800/50">
-                {!isMembersLoading ? (
+                {isMembersLoading ? (
+                  <tr>
+                    <td colSpan="4" className="py-8 text-center text-gray-500">
+                      Loading members...
+                    </td>
+                  </tr>
+                ) : membersError ? (
+                  <tr>
+                    <td colSpan="4" className="py-8 text-center">
+                      <div className="text-red-500 font-medium">Error loading members</div>
+                      <div className="text-red-400 text-xs mt-1">{membersError.message}</div>
+                    </td>
+                  </tr>
+                ) : !membersData?.members?.length ? (
+                  <tr>
+                    <td colSpan="4" className="py-8 text-center text-gray-500">
+                      No team members found. {!hasCreateMemberPermission && 'You may not have permission to view members.'}
+                    </td>
+                  </tr>
+                ) : (
                   membersData?.members?.map((member, index) => (
                     <tr key={index} className="hover:bg-zinc-900/30 transition-colors">
                       <td className="py-4">
@@ -659,12 +661,6 @@ const TeamTab = ({ workspace = {} }) => {
                       </td>
                     </tr>
                   ))
-                ) : (
-                  <tr>
-                    <td colSpan={4}>
-                      <div className="w-full h-8 bg-zinc-800 animate-pulse rounded" />
-                    </td>
-                  </tr>
                 )}
               </tbody>
             </table>

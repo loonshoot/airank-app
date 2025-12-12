@@ -43,16 +43,14 @@ export const GET_ALL_WORKSPACES = gql`
 
 export const GET_USER_INVITATIONS = gql`
   query GetUserInvitations {
-    members {
+    pendingInvitations {
       _id
-      email
-      status
-      teamRole
       workspaceId
+      workspaceName
       inviter
+      inviterEmail
       invitedAt
       permissions
-      updatedAt
     }
   }
 `;

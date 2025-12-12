@@ -1,8 +1,7 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import EmailProvider from 'next-auth/providers/email';
 import prisma from '@/prisma/index';
-import { html, text } from '@/config/email-templates/signin';
-import { emailConfig, sendMail } from '@/lib/server/mail';
+import { sendMagicLinkEmail, sendWelcomeEmail } from '@/lib/server/mail';
 import { createPaymentAccount, getPayment } from '@/prisma/services/customer';
 const isProduction = process.env.NODE_ENV === 'production';
 
@@ -72,6 +71,31 @@ export const authOptions = {
         await airankDb.asPromise();
 
         const usersCollection = airankDb.collection('users');
+        const membersCollection = airankDb.collection('members');
+
+        // Check if user already exists (to determine if this is truly a first login)
+        const existingUser = await usersCollection.findOne({ _id: user.id });
+        const isFirstLogin = !existingUser;
+
+        // Check if there's an existing user document with this email but different ID (created during invite)
+        const existingUserByEmail = await usersCollection.findOne({ email: user.email, _id: { $ne: user.id } });
+
+        // If there's an old user document created during invite, update member records to use the NextAuth user ID
+        if (existingUserByEmail) {
+          const updateResult = await membersCollection.updateMany(
+            { userId: existingUserByEmail._id },
+            { $set: { userId: user.id, updatedAt: new Date() } }
+          );
+          console.log("Updated member records from old userId to NextAuth userId:", {
+            oldUserId: existingUserByEmail._id,
+            newUserId: user.id,
+            updatedCount: updateResult.modifiedCount
+          });
+
+          // Delete the old user document (it was just a placeholder)
+          await usersCollection.deleteOne({ _id: existingUserByEmail._id });
+          console.log("Deleted placeholder user document:", existingUserByEmail._id);
+        }
 
         // Upsert user (create or update)
         await usersCollection.updateOne(
@@ -85,13 +109,35 @@ export const authOptions = {
               updatedAt: new Date()
             },
             $setOnInsert: {
-              createdAt: new Date()
+              createdAt: new Date(),
+              welcomeEmailSent: false
             }
           },
           { upsert: true }
         );
 
         console.log("User synced to MongoDB:", { userId: user.id, email: user.email });
+
+        // Send welcome email on first login
+        if (isFirstLogin || isNewUser) {
+          try {
+            await sendWelcomeEmail({
+              to: user.email,
+              name: user.name || user.email.split('@')[0],
+              email: user.email,
+            });
+
+            // Mark welcome email as sent
+            await usersCollection.updateOne(
+              { _id: user.id },
+              { $set: { welcomeEmailSent: true, welcomeEmailSentAt: new Date() } }
+            );
+
+            console.log("Welcome email sent to new user:", user.email);
+          } catch (emailError) {
+            console.error("Failed to send welcome email:", emailError);
+          }
+        }
 
         await airankDb.close();
       } catch (error) {
@@ -107,20 +153,33 @@ export const authOptions = {
   providers: [
     EmailProvider({
       from: process.env.EMAIL_FROM,
-      server: emailConfig,
-      sendVerificationRequest: async ({ identifier: email, url }) => {
-        const { host } = new URL(url);
-        
-        if (isProduction) {
-          await sendMail({
-            html: html({ email, url }),
-            subject: `[AI Rank] Sign in to ${host}`,
-            text: text({ email, url }),
-            to: email,
-          });
-        } else {
-          console.log("Dev Magic Link:" + url)
-        }
+      sendVerificationRequest: async ({ identifier: email, url, request }) => {
+        // Extract browser/OS info from request headers if available
+        const userAgent = request?.headers?.['user-agent'] || '';
+        let operatingSystem = 'Unknown';
+        let browserName = 'Unknown';
+
+        // Parse OS from user agent
+        if (userAgent.includes('Windows')) operatingSystem = 'Windows';
+        else if (userAgent.includes('Mac')) operatingSystem = 'macOS';
+        else if (userAgent.includes('Linux')) operatingSystem = 'Linux';
+        else if (userAgent.includes('iPhone') || userAgent.includes('iPad')) operatingSystem = 'iOS';
+        else if (userAgent.includes('Android')) operatingSystem = 'Android';
+
+        // Parse browser from user agent
+        if (userAgent.includes('Chrome') && !userAgent.includes('Edg')) browserName = 'Chrome';
+        else if (userAgent.includes('Safari') && !userAgent.includes('Chrome')) browserName = 'Safari';
+        else if (userAgent.includes('Firefox')) browserName = 'Firefox';
+        else if (userAgent.includes('Edg')) browserName = 'Edge';
+
+        // Send magic link email via Postmark (logs in dev, sends in prod)
+        await sendMagicLinkEmail({
+          to: email,
+          name: email.split('@')[0],
+          actionUrl: url,
+          operatingSystem,
+          browserName,
+        });
       },
     }),
   ],
