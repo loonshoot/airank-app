@@ -85,6 +85,64 @@ export const DECLINE_INVITATION = gql`
   }
 `;
 
+// Member Management Queries
+export const QUERY_MEMBERS = gql`
+  query Members($workspaceId: String, $workspaceSlug: String) {
+    members(workspaceId: $workspaceId, workspaceSlug: $workspaceSlug) {
+      _id
+      workspaceId
+      userId
+      email
+      name
+      inviter
+      invitedAt
+      joinedAt
+      updatedAt
+      status
+      teamRole
+      permissions
+    }
+  }
+`;
+
+// Member Management Mutations
+export const CREATE_MEMBER = gql`
+  mutation CreateMember($input: CreateMemberInput!) {
+    createMember(input: $input) {
+      _id
+      workspaceId
+      userId
+      email
+      inviter
+      permissions
+      status
+      teamRole
+    }
+  }
+`;
+
+export const UPDATE_MEMBER = gql`
+  mutation UpdateMember($workspaceId: String!, $memberId: String!, $permissions: [String]!) {
+    updateMember(workspaceId: $workspaceId, memberId: $memberId, permissions: $permissions) {
+      _id
+      email
+      permissions
+      status
+      teamRole
+    }
+  }
+`;
+
+export const DELETE_MEMBER = gql`
+  mutation DeleteMember($input: DeleteMemberInput!) {
+    deleteMember(input: $input) {
+      _id
+      status
+      deletedAt
+    }
+  }
+`;
+
 // Helper function to execute GraphQL queries with a client
 export const executeQuery = async (client, query, variables = {}, options = {}) => {
   try {

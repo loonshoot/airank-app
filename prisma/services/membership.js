@@ -3,8 +3,18 @@ import prisma from '@/prisma/index';
 
 export const getMember = async (id) =>
   await prisma.member.findFirst({
-    select: { teamRole: true },
+    select: { teamRole: true, permissions: true },
     where: { id },
+  });
+
+export const getMemberByWorkspaceAndEmail = async (workspaceId, email) =>
+  await prisma.member.findFirst({
+    select: { id: true, teamRole: true, permissions: true, status: true },
+    where: {
+      workspaceId,
+      email,
+      deletedAt: { isSet: false }
+    },
   });
 
 export const getMembers = async (slug) =>
@@ -14,6 +24,7 @@ export const getMembers = async (slug) =>
       email: true,
       status: true,
       teamRole: true,
+      permissions: true,
       member: { select: { name: true } },
     },
     where: {
@@ -79,4 +90,23 @@ export const updateStatus = async (id, status) =>
   await prisma.member.update({
     data: { status },
     where: { id },
+  });
+
+export const updatePermissions = async (id, permissions) =>
+  await prisma.member.update({
+    data: { permissions, updatedAt: new Date() },
+    where: { id },
+  });
+
+export const getMemberById = async (id) =>
+  await prisma.member.findFirst({
+    select: {
+      id: true,
+      teamRole: true,
+      permissions: true,
+      status: true,
+      email: true,
+      workspaceId: true
+    },
+    where: { id, deletedAt: { isSet: false } },
   });
