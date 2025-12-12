@@ -185,20 +185,6 @@ const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
     setIsSubmitting(false);
   };
 
-  const getActivePreset = () => {
-    for (const [key, preset] of Object.entries(ROLE_PRESETS)) {
-      if (
-        preset.permissions.length === selectedPermissions.length &&
-        preset.permissions.every(p => selectedPermissions.includes(p))
-      ) {
-        return key;
-      }
-    }
-    return null;
-  };
-
-  const activePreset = getActivePreset();
-
   return (
     <Modal show={isOpen} title="Edit Member Permissions" toggle={onClose}>
       <div className="space-y-6">
@@ -208,33 +194,24 @@ const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
 
         {/* Role Presets */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-3">Quick Role Presets</label>
-          <div className="grid grid-cols-3 gap-2">
+          <label className="block text-sm font-medium text-gray-300 mb-3">Set Role Permissions</label>
+          <div className="flex flex-wrap gap-2">
             {Object.entries(ROLE_PRESETS).map(([key, preset]) => (
               <button
                 key={key}
                 onClick={() => handleRolePresetSelect(key)}
-                className={`px-3 py-2 text-sm border rounded transition-colors ${
-                  activePreset === key
-                    ? 'bg-pink-600 border-pink-500 text-white'
-                    : 'border-zinc-700 text-gray-300 hover:bg-zinc-800 hover:border-zinc-600'
-                }`}
+                className="px-4 py-1.5 text-sm border border-green-600/50 rounded-full transition-colors hover:border-green-600 hover:bg-green-600/20 text-green-500 hover:text-green-400"
               >
-                <div className="font-medium">{preset.label}</div>
+                {preset.label}
               </button>
             ))}
           </div>
-          {activePreset && (
-            <p className="mt-2 text-xs text-gray-500">
-              {ROLE_PRESETS[activePreset].description}
-            </p>
-          )}
         </div>
 
         {/* Individual Permissions */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-3">
-            Individual Permissions ({selectedPermissions.length} selected)
+            Permissions ({selectedPermissions.length} selected)
           </label>
           <div className="max-h-60 overflow-y-auto border border-zinc-800 rounded p-3 space-y-2 custom-scrollbar">
             {/* Query Permissions */}
@@ -248,7 +225,7 @@ const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
                     type="checkbox"
                     checked={selectedPermissions.includes(permission.value)}
                     onChange={() => handlePermissionToggle(permission.value)}
-                    className="mr-3 rounded border-zinc-600 bg-zinc-800 text-pink-600 focus:ring-pink-500"
+                    className="mr-3 rounded border-zinc-600 bg-zinc-800 text-green-600 focus:ring-green-500"
                   />
                   <span className="text-sm text-gray-300">{permission.label}</span>
                 </label>
@@ -266,7 +243,7 @@ const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
                     type="checkbox"
                     checked={selectedPermissions.includes(permission.value)}
                     onChange={() => handlePermissionToggle(permission.value)}
-                    className="mr-3 rounded border-zinc-600 bg-zinc-800 text-pink-600 focus:ring-pink-500"
+                    className="mr-3 rounded border-zinc-600 bg-zinc-800 text-green-600 focus:ring-green-500"
                   />
                   <span className="text-sm text-gray-300">{permission.label}</span>
                 </label>
@@ -286,7 +263,7 @@ const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
             Cancel
           </Button>
           <Button
-            background="Pink"
+            background="Green"
             border="Light"
             disabled={isSubmitting}
             onClick={handleSave}
@@ -442,17 +419,6 @@ const TeamTab = ({ workspace = {} }) => {
     if (!permissions || permissions.length === 0) {
       return 'No permissions';
     }
-
-    // Check for role presets
-    for (const [key, preset] of Object.entries(ROLE_PRESETS)) {
-      if (
-        preset.permissions.length === permissions.length &&
-        preset.permissions.every(p => permissions.includes(p))
-      ) {
-        return preset.label;
-      }
-    }
-
     return `${permissions.length} permissions`;
   };
 
@@ -476,7 +442,7 @@ const TeamTab = ({ workspace = {} }) => {
               {members.map((member, index) => (
                 <div key={index} className="flex flex-row items-center space-x-3">
                   <input
-                    className="flex-1 px-3 py-2 border border-zinc-800 bg-zinc-900 rounded focus:border-pink-500 focus:outline-none"
+                    className="flex-1 px-3 py-2 border border-zinc-800 bg-zinc-900 rounded focus:border-green-600 focus:outline-none"
                     disabled={isSubmitting}
                     onChange={(event) => handleEmailChange(event, index)}
                     placeholder="name@email.com"
@@ -510,7 +476,7 @@ const TeamTab = ({ workspace = {} }) => {
               All invited team members will be set to <strong>Pending</strong> with <strong>Viewer</strong> permissions
             </small>
             <Button
-              background="Pink"
+              background="Green"
               border="Light"
               disabled={validateEmails || isSubmitting}
               onClick={invite}
@@ -575,7 +541,7 @@ const TeamTab = ({ workspace = {} }) => {
                             member.status === InvitationStatus.ACCEPTED && (
                               <button
                                 onClick={() => openPermissionsModal(member)}
-                                className="text-pink-500 hover:text-pink-400 transition-colors p-1"
+                                className="text-green-600 hover:text-green-500 transition-colors p-1"
                                 title="Edit permissions"
                               >
                                 <PencilIcon className="w-4 h-4" />
