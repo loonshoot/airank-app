@@ -13,8 +13,8 @@ import { AccountLayout } from '@/layouts/index';
 import { getWorkspace } from '@/prisma/services/workspace';
 import TabNavigation from '@/components/TabNavigation';
 
-import WorkspaceTab from './components/WorkspaceTab';
-import BillingTab from './components/BillingTab';
+import WorkspaceTab from './_components/WorkspaceTab';
+import BillingTab from './_components/BillingTab';
 
 const sourcesQuery = gql`
 query Sources($workspaceSlug: String!) {

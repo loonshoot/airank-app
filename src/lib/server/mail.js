@@ -1,10 +1,16 @@
-import postmark from 'postmark';
+import * as postmark from 'postmark';
 
 const isProduction = process.env.NODE_ENV === 'production';
 const isDevelopment = !isProduction;
 
-// Postmark client
-const client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN);
+// Postmark client - lazily initialized to avoid build-time errors
+let _client = null;
+const getClient = () => {
+  if (!_client && process.env.POSTMARK_SERVER_TOKEN) {
+    _client = new postmark.ServerClient(process.env.POSTMARK_SERVER_TOKEN);
+  }
+  return _client;
+};
 
 // Common template model values
 const getCommonTemplateModel = () => ({
@@ -40,6 +46,11 @@ export const sendMagicLinkEmail = async ({ to, name, actionUrl, operatingSystem 
   }
 
   try {
+    const client = getClient();
+    if (!client) {
+      console.error('Postmark client not initialized - missing POSTMARK_SERVER_TOKEN');
+      throw new Error('Email service not configured');
+    }
     const result = await client.sendEmailWithTemplate({
       From: process.env.EMAIL_FROM || 'noreply@airank.com',
       To: to,
@@ -79,6 +90,11 @@ export const sendWelcomeEmail = async ({ to, name, email }) => {
   }
 
   try {
+    const client = getClient();
+    if (!client) {
+      console.error('Postmark client not initialized - missing POSTMARK_SERVER_TOKEN');
+      throw new Error('Email service not configured');
+    }
     const result = await client.sendEmailWithTemplate({
       From: process.env.EMAIL_FROM || 'noreply@airank.com',
       To: to,
@@ -118,6 +134,11 @@ export const sendWorkspaceInvitationEmail = async ({ to, name, inviterName, work
   }
 
   try {
+    const client = getClient();
+    if (!client) {
+      console.error('Postmark client not initialized - missing POSTMARK_SERVER_TOKEN');
+      throw new Error('Email service not configured');
+    }
     const result = await client.sendEmailWithTemplate({
       From: process.env.EMAIL_FROM || 'noreply@airank.com',
       To: to,
@@ -155,6 +176,11 @@ export const sendMail = async ({ from, html, subject, text, to }) => {
   }
 
   try {
+    const client = getClient();
+    if (!client) {
+      console.error('Postmark client not initialized - missing POSTMARK_SERVER_TOKEN');
+      throw new Error('Email service not configured');
+    }
     await client.sendEmail({
       From: from ?? process.env.EMAIL_FROM,
       To: to,
@@ -168,4 +194,4 @@ export const sendMail = async ({ from, html, subject, text, to }) => {
   }
 };
 
-export default client;
+export default getClient;
