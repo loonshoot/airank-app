@@ -101,6 +101,7 @@ export const QUERY_MEMBERS = gql`
       status
       teamRole
       permissions
+      isCurrentUser
     }
   }
 `;

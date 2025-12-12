@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { getSession } from 'next-auth/react';
 import { getToken } from 'next-auth/jwt';
 import { useTranslation } from "react-i18next";
-import { useQuery, gql } from '@apollo/client';
+import { gql } from '@apollo/client';
 import { initializeApollo, addApolloState } from "@/lib/client/apollo";
 import { useWorkspace } from '@/providers/workspace';
 
 import Content from '@/components/Content/index';
 import Meta from '@/components/Meta/index';
-import Modal from '@/components/Modal/index';
 import { AccountLayout } from '@/layouts/index';
-import { getWorkspace, isWorkspaceOwner } from '@/prisma/services/workspace';
+import { getWorkspace } from '@/prisma/services/workspace';
 import TabNavigation from '@/components/TabNavigation';
 
 import WorkspaceTab from './components/WorkspaceTab';
@@ -28,11 +27,11 @@ query Sources($workspaceSlug: String!) {
 }
 `;
 
-const General = ({ isTeamOwner, workspace: serverWorkspace, sources, token }) => {
+const General = ({ workspace: serverWorkspace, sources, token }) => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('general');
   const { workspace: contextWorkspace } = useWorkspace();
-  
+
   // Use server workspace if available, otherwise fall back to context workspace
   const workspace = serverWorkspace || contextWorkspace;
 
@@ -62,8 +61,8 @@ const General = ({ isTeamOwner, workspace: serverWorkspace, sources, token }) =>
           </div>
         ) : (
           <>
-            {activeTab === 'general' && <WorkspaceTab workspace={workspace} isTeamOwner={isTeamOwner} />}
-            {activeTab === 'team' && <TeamTab workspace={workspace} isTeamOwner={isTeamOwner} />}
+            {activeTab === 'general' && <WorkspaceTab workspace={workspace} />}
+            {activeTab === 'team' && <TeamTab workspace={workspace} />}
             {activeTab === 'billing' && <BillingTab />}
           </>
         )}
@@ -76,7 +75,6 @@ export const getServerSideProps = async (context) => {
   const session = await getSession(context);
   const token = await getToken({ req: context.req, secret: process.env.NEXTAUTH_SECRET, raw: true });
   const apolloClient = initializeApollo();
-  let isTeamOwner = false;
   let workspace = null;
 
   if (session) {
@@ -87,7 +85,6 @@ export const getServerSideProps = async (context) => {
     );
 
     if (workspace) {
-      isTeamOwner = isWorkspaceOwner(session.user.email, workspace);
       workspace.inviteLink = `${
         process.env.APP_URL
       }/teams/invite?code=${encodeURI(workspace.inviteCode)}`;
@@ -106,7 +103,6 @@ export const getServerSideProps = async (context) => {
 
       return addApolloState(apolloClient, {
         props: {
-          isTeamOwner,
           workspace,
           sources: data.sources,
           token,
@@ -117,7 +113,6 @@ export const getServerSideProps = async (context) => {
 
   return {
     props: {
-      isTeamOwner,
       workspace,
       sources: [],
       token: null,

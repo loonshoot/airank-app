@@ -1,14 +1,12 @@
-import { Fragment, useState, useEffect } from 'react';
+import { Fragment, useState } from 'react';
 import { Menu, Transition } from '@headlessui/react';
 import {
-  ChevronDownIcon,
   DocumentDuplicateIcon,
   EllipsisVerticalIcon,
   XMarkIcon,
   PencilIcon,
 } from '@heroicons/react/24/outline';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import { getSession } from 'next-auth/react';
 import toast from 'react-hot-toast';
 import isEmail from 'validator/lib/isEmail';
 import { useMutation, useQuery } from '@apollo/client';
@@ -16,7 +14,6 @@ import { useMutation, useQuery } from '@apollo/client';
 import Button from '@/components/Button/index';
 import Card from '@/components/Card/index';
 import Modal from '@/components/Modal/index';
-import api from '@/lib/common/api';
 import { useTranslation } from "react-i18next";
 import {
   QUERY_MEMBERS,
@@ -30,12 +27,6 @@ const InvitationStatus = {
   PENDING: 'PENDING',
   ACCEPTED: 'ACCEPTED',
   DECLINED: 'DECLINED'
-};
-
-// Team role constants
-const TeamRole = {
-  MEMBER: 'MEMBER',
-  OWNER: 'OWNER'
 };
 
 // AIRank-specific permissions
@@ -156,7 +147,7 @@ const ROLE_PRESETS = {
   }
 };
 
-const MEMBERS_TEMPLATE = { email: '', role: TeamRole.MEMBER };
+const MEMBERS_TEMPLATE = { email: '' };
 
 const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
   const [selectedPermissions, setSelectedPermissions] = useState(member?.permissions || []);
@@ -308,7 +299,7 @@ const PermissionsModal = ({ isOpen, onClose, member, onSave }) => {
   );
 };
 
-const TeamTab = ({ workspace = {}, isTeamOwner }) => {
+const TeamTab = ({ workspace = {} }) => {
   const { t } = useTranslation();
 
   // GraphQL query for members
@@ -325,22 +316,9 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
 
   const [isSubmitting, setSubmittingState] = useState(false);
   const [members, setMembers] = useState([{ ...MEMBERS_TEMPLATE }]);
-  const [inviterEmail, setInviterEmail] = useState('');
-  const [currentUserEmail, setCurrentUserEmail] = useState('');
   const [editingMember, setEditingMember] = useState(null);
   const [showPermissionsModal, setShowPermissionsModal] = useState(false);
   const validateEmails = members.filter((member) => !isEmail(member.email)).length !== 0;
-
-  useEffect(() => {
-    const getSessionData = async () => {
-      const session = await getSession();
-      if (session?.user?.email) {
-        setInviterEmail(session.user.email);
-        setCurrentUserEmail(session.user.email);
-      }
-    };
-    getSessionData();
-  }, []);
 
   if (!workspace) {
     return (
@@ -354,11 +332,13 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
     );
   }
 
-  // Get current user's member record
-  const currentUserMember = membersData?.members?.find(m => m.email === currentUserEmail);
-  const hasCreateMemberPermission = isTeamOwner || currentUserMember?.permissions?.includes('mutation:createMember');
-  const hasUpdateMemberPermission = isTeamOwner || currentUserMember?.permissions?.includes('mutation:updateMember');
-  const hasDeleteMemberPermission = isTeamOwner || currentUserMember?.permissions?.includes('mutation:deleteMember');
+  // Get current user's member record using isCurrentUser flag from GraphQL
+  const currentUserMember = membersData?.members?.find(m => m.isCurrentUser);
+
+  // Permissions are derived ONLY from the permissions array - no TeamRole/isOwner fallbacks
+  const hasCreateMemberPermission = currentUserMember?.permissions?.includes('mutation:createMember');
+  const hasUpdateMemberPermission = currentUserMember?.permissions?.includes('mutation:updateMember');
+  const hasDeleteMemberPermission = currentUserMember?.permissions?.includes('mutation:deleteMember');
 
   const copyToClipboard = () => toast.success('Copied to clipboard!');
 
@@ -367,41 +347,14 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
     setMembers([...members]);
   };
 
-  const changeRole = (memberId) => {
-    api(`/api/workspace/team/role`, {
-      body: { memberId },
-      method: 'PUT',
-    }).then((response) => {
-      if (response.errors) {
-        Object.keys(response.errors).forEach((error) =>
-          toast.error(response.errors[error].msg)
-        );
-      } else {
-        toast.success('Updated team member role!');
-        refetchMembers();
-      }
-    });
-  };
-
   const handleEmailChange = (event, index) => {
     const member = members[index];
     member.email = event.target.value;
     setMembers([...members]);
   };
 
-  const handleRoleChange = (event, index) => {
-    const member = members[index];
-    member.role = event.target.value;
-    setMembers([...members]);
-  };
-
   // Invite using GraphQL mutation
   const invite = async () => {
-    if (!inviterEmail) {
-      toast.error('Unable to determine inviter email. Please try again.');
-      return;
-    }
-
     setSubmittingState(true);
 
     try {
@@ -527,47 +480,26 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
         <Card>
           <Card.Body
             title="Add New Members"
-            subtitle="Invite team members using email address"
+            subtitle="Invite team members using email address. New members will start with Viewer permissions."
           >
             <div className="flex flex-col space-y-3">
               <div className="flex flex-row space-x-5">
-                <div className="w-1/2">
+                <div className="flex-1">
                   <label className="text-sm font-bold text-light">
                     {t("common.label.email")}
                   </label>
                 </div>
-                <div className="w-1/2 md:w-1/4">
-                  <label className="text-sm font-bold text-light">
-                    {t("common.label.role")}
-                  </label>
-                </div>
               </div>
               {members.map((member, index) => (
-                <div key={index} className="flex flex-row space-x-5">
+                <div key={index} className="flex flex-row items-center space-x-3">
                   <input
-                    className="w-1/2 px-3 py-2 border border-zinc-800 bg-zinc-900 rounded focus:border-pink-500 focus:outline-none"
+                    className="flex-1 px-3 py-2 border border-zinc-800 bg-zinc-900 rounded focus:border-pink-500 focus:outline-none"
                     disabled={isSubmitting}
                     onChange={(event) => handleEmailChange(event, index)}
                     placeholder="name@email.com"
                     type="text"
                     value={member.email}
                   />
-                  <div className="relative inline-block w-1/2 border border-zinc-800 rounded md:w-1/4">
-                    <select
-                      className="w-full px-3 py-2 capitalize appearance-none bg-zinc-900 rounded focus:outline-none"
-                      disabled={isSubmitting}
-                      onChange={(event) => handleRoleChange(event, index)}
-                    >
-                      {Object.keys(TeamRole).map((key, index) => (
-                        <option key={index} value={TeamRole[key]}>
-                          {TeamRole[key].toLowerCase()}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                      <ChevronDownIcon className="w-5 h-5" />
-                    </div>
-                  </div>
                   {index !== 0 && (
                     <button
                       className="text-red-500 hover:text-red-400 transition-colors"
@@ -592,7 +524,7 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
           </Card.Body>
           <Card.Footer>
             <small className="text-gray-400">
-              All invited team members will be set to <strong>Pending</strong>
+              All invited team members will be set to <strong>Pending</strong> with <strong>Viewer</strong> permissions
             </small>
             <Button
               background="Pink"
@@ -637,7 +569,7 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
                             {getPermissionsSummary(member.permissions)}
                           </span>
                           {hasUpdateMemberPermission &&
-                            member.email !== currentUserEmail &&
+                            !member.isCurrentUser &&
                             member.status === InvitationStatus.ACCEPTED && (
                               <button
                                 onClick={() => openPermissionsModal(member)}
@@ -669,7 +601,7 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
                         </div>
                       </td>
                       <td className="py-4 text-right">
-                        {workspace?.creator?.email !== member.email &&
+                        {!member.isCurrentUser &&
                           (hasUpdateMemberPermission || hasDeleteMemberPermission) && (
                             <Menu
                               as="div"
@@ -701,25 +633,6 @@ const TeamTab = ({ workspace = {}, isTeamOwner }) => {
                                           >
                                             <PencilIcon className="w-4 h-4 mr-2" />
                                             Edit Permissions
-                                          </button>
-                                        )}
-                                      </Menu.Item>
-                                    )}
-                                    {isTeamOwner && (
-                                      <Menu.Item>
-                                        {({ active }) => (
-                                          <button
-                                            className={`flex items-center w-full px-4 py-2 text-sm ${active ? 'bg-zinc-800 text-white' : 'text-gray-300'
-                                              }`}
-                                            onClick={() => changeRole(member._id)}
-                                          >
-                                            <span>
-                                              Change role to &quot;
-                                              {member.teamRole === TeamRole.MEMBER
-                                                ? TeamRole.OWNER
-                                                : TeamRole.MEMBER}
-                                              &quot;
-                                            </span>
                                           </button>
                                         )}
                                       </Menu.Item>
