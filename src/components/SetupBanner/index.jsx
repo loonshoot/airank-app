@@ -201,47 +201,87 @@ const SetupBanner = () => {
 
   // Show setup progress banner
   return (
-    <div className="sticky top-0 z-10 bg-green-800 py-2 px-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-white">Complete these steps to get your personalized ranking report:</span>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => window.location.href = `/${workspace?.slug}/brands`}
-              className={`text-sm font-medium transition-all ${
-                workspaceConfig.hasOwnBrand
-                  ? 'line-through text-green-300 cursor-default'
-                  : 'text-white hover:text-green-200 underline'
-              }`}
-              disabled={workspaceConfig.hasOwnBrand}
-            >
-              Set Primary Brand
-            </button>
-            <span className="text-green-300">&gt;</span>
-            <button
-              onClick={() => window.location.href = `/${workspace?.slug}/models`}
-              className={`text-sm font-medium transition-all ${
-                workspaceConfig.hasModels
-                  ? 'line-through text-green-300 cursor-default'
-                  : 'text-white hover:text-green-200 underline'
-              }`}
-              disabled={workspaceConfig.hasModels}
-            >
-              Configure Models
-            </button>
-            <span className="text-green-300">&gt;</span>
-            <button
-              onClick={() => window.location.href = `/${workspace?.slug}/prompts`}
-              className={`text-sm font-medium transition-all ${
-                workspaceConfig.hasPrompts
-                  ? 'line-through text-green-300 cursor-default'
-                  : 'text-white hover:text-green-200 underline'
-              }`}
-              disabled={workspaceConfig.hasPrompts}
-            >
-              Configure Prompts
-            </button>
-          </div>
+    <div className="bg-green-800 py-2 px-4">
+      {/* Desktop layout */}
+      <div className="hidden md:flex items-center justify-between">
+        <span className="text-sm text-white">Complete these steps to get your personalized ranking report:</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.location.href = `/${workspace?.slug}/brands`}
+            className={`text-sm font-medium transition-all ${
+              workspaceConfig.hasOwnBrand
+                ? 'line-through text-green-300 cursor-default'
+                : 'text-white hover:text-green-200 underline'
+            }`}
+            disabled={workspaceConfig.hasOwnBrand}
+          >
+            Set Primary Brand
+          </button>
+          <span className="text-green-300">&gt;</span>
+          <button
+            onClick={() => window.location.href = `/${workspace?.slug}/models`}
+            className={`text-sm font-medium transition-all ${
+              workspaceConfig.hasModels
+                ? 'line-through text-green-300 cursor-default'
+                : 'text-white hover:text-green-200 underline'
+            }`}
+            disabled={workspaceConfig.hasModels}
+          >
+            Configure Models
+          </button>
+          <span className="text-green-300">&gt;</span>
+          <button
+            onClick={() => window.location.href = `/${workspace?.slug}/prompts`}
+            className={`text-sm font-medium transition-all ${
+              workspaceConfig.hasPrompts
+                ? 'line-through text-green-300 cursor-default'
+                : 'text-white hover:text-green-200 underline'
+            }`}
+            disabled={workspaceConfig.hasPrompts}
+          >
+            Configure Prompts
+          </button>
+        </div>
+      </div>
+      {/* Mobile layout */}
+      <div className="flex md:hidden flex-col items-center gap-2">
+        <span className="text-sm text-white text-center">Complete these steps to get your personalized ranking report:</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => window.location.href = `/${workspace?.slug}/brands`}
+            className={`text-sm font-medium transition-all ${
+              workspaceConfig.hasOwnBrand
+                ? 'line-through text-green-300 cursor-default'
+                : 'text-white hover:text-green-200 underline'
+            }`}
+            disabled={workspaceConfig.hasOwnBrand}
+          >
+            Set Primary Brand
+          </button>
+          <span className="text-green-300">&gt;</span>
+          <button
+            onClick={() => window.location.href = `/${workspace?.slug}/models`}
+            className={`text-sm font-medium transition-all ${
+              workspaceConfig.hasModels
+                ? 'line-through text-green-300 cursor-default'
+                : 'text-white hover:text-green-200 underline'
+            }`}
+            disabled={workspaceConfig.hasModels}
+          >
+            Configure Models
+          </button>
+          <span className="text-green-300">&gt;</span>
+          <button
+            onClick={() => window.location.href = `/${workspace?.slug}/prompts`}
+            className={`text-sm font-medium transition-all ${
+              workspaceConfig.hasPrompts
+                ? 'line-through text-green-300 cursor-default'
+                : 'text-white hover:text-green-200 underline'
+            }`}
+            disabled={workspaceConfig.hasPrompts}
+          >
+            Configure Prompts
+          </button>
         </div>
       </div>
     </div>
