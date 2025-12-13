@@ -16,37 +16,27 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
   // Memoize menu to prevent unnecessary re-renders
   const memoizedMenu = useMemo(() => menu, [menu]);
 
-  const renderMenu = () => {
-    // On account page, show User menu only (with logout)
+  // Separate User menu from other menus so we can pin it to the bottom
+  const getMenuSections = () => {
+    let menuItems = memoizedMenu;
+
+    // On account page, use the noWorkspaceMenu
     if (isAccountPage) {
-      const userMenu = noWorkspaceMenu();
-      return userMenu.map((item, index) => (
-        <Menu
-          key={index}
-          data={item}
-          isLoading={false}
-          showMenu={true}
-          routerType={routerType}
-        />
-      ));
+      menuItems = noWorkspaceMenu();
     }
 
-    // Render menu immediately if we have a workspace slug from URL
-    // Don't wait for workspace context - the menu prop already has the slug
-    if (!memoizedMenu || memoizedMenu.length === 0) {
-      return null;
+    if (!menuItems || menuItems.length === 0) {
+      return { mainMenus: [], userMenu: null };
     }
 
-    return memoizedMenu.map((item, index) => (
-      <Menu
-        key={index}
-        data={item}
-        isLoading={false}
-        showMenu={true}
-        routerType={routerType}
-      />
-    ));
+    // Find and separate the User menu
+    const userMenu = menuItems.find(item => item.name === 'User');
+    const mainMenus = menuItems.filter(item => item.name !== 'User');
+
+    return { mainMenus, userMenu };
   };
+
+  const { mainMenus, userMenu } = getMenuSections();
 
   const toggleMenu = () => setMenuVisibility(!showMenu);
 
@@ -95,11 +85,33 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
           </div>
 
           {/* Menu Content */}
-          <div className="flex-1 flex flex-col space-y-5 p-5">
-            <Actions routerType={routerType} isAccountPage={isAccountPage} />
-            <div className="flex flex-col space-y-10">
-              {renderMenu()}
+          <div className="flex-1 flex flex-col p-5">
+            <div className="space-y-5">
+              <Actions routerType={routerType} isAccountPage={isAccountPage} />
+              {/* Main menu sections */}
+              <div className="flex flex-col space-y-10">
+                {mainMenus.map((item, index) => (
+                  <Menu
+                    key={index}
+                    data={item}
+                    isLoading={false}
+                    showMenu={true}
+                    routerType={routerType}
+                  />
+                ))}
+              </div>
             </div>
+            {/* User menu pinned to bottom */}
+            {userMenu && (
+              <div className="mt-auto pt-5">
+                <Menu
+                  data={userMenu}
+                  isLoading={false}
+                  showMenu={true}
+                  routerType={routerType}
+                />
+              </div>
+            )}
           </div>
         </div>
       </aside>
