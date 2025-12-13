@@ -41,9 +41,9 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
   const toggleMenu = () => setMenuVisibility(!showMenu);
 
   return (
-    <div className="md:w-1/4">
+    <div className="md:w-1/4 bg-zinc-900 border-r border-zinc-800">
       {/* Logo and Mobile Menu Button */}
-      <div className="flex items-center justify-center p-4 border-b border-zinc-800/50 md:hidden bg-zinc-900/50">
+      <div className="flex items-center justify-center p-4 border-b border-zinc-800/50 md:hidden bg-zinc-900">
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
             src="/images/logo-light.svg"
@@ -67,10 +67,10 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
         className={`
           fixed md:sticky top-[72px] md:top-0 w-full h-[calc(100vh-72px)] md:h-screen
           ${showMenu ? 'block' : 'hidden md:block'}
-          overflow-y-auto bg-zinc-900/50
+          overflow-y-auto bg-zinc-900
         `}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full bg-zinc-900">
           {/* Logo Section (Desktop Only) */}
           <div className="relative hidden md:flex items-center justify-center p-5 border-b border-zinc-800/50">
             <Link href="/" className="flex-grow text-2xl font-bold">
