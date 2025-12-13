@@ -181,7 +181,7 @@ const SetupBanner = () => {
   // Show completion banner
   if (allConfigured) {
     return (
-      <div className="sticky top-0 z-10 bg-green-800 py-2 px-4">
+      <div className="bg-green-800 py-2 px-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-white">
             Your workspace is ready. Run your first report to see your personalized analytics.

@@ -31,11 +31,13 @@ const AccountLayout = ({ children, routerType, isAccountPage = false }) => {
   return (
     <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
       <Sidebar menu={sidebarMenu} routerType={routerType} isAccountPage={isAccountPage} />
-      <Content>
-        <Header routerType={routerType} />
+      <div className="flex flex-col h-full md:w-3/4 bg-[#0a0a0a] overflow-hidden">
         <SetupBanner />
-        {children}
-      </Content>
+        <Content>
+          <Header routerType={routerType} />
+          {children}
+        </Content>
+      </div>
       <Toaster position="bottom-left" toastOptions={{ duration: 10000 }} />
     </main>
   );
