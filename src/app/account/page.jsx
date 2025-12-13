@@ -268,8 +268,8 @@ export default function AccountPage() {
             <Card.Empty>{t('workspace.message.createworkspace')}</Card.Empty>
           )}
         </div>
-        {/* Create Workspace Button */}
-        <div className="mt-5">
+        {/* Create Workspace Button - only show on mobile */}
+        <div className="mt-5 md:hidden">
           <Button
             background="Pink"
             border="Dark"
