@@ -62,7 +62,7 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
         className={`
           fixed md:sticky top-[72px] md:top-0 w-full h-[calc(100vh-72px)] md:h-screen
           ${showMenu ? 'block' : 'hidden md:block'}
-          overflow-y-auto bg-zinc-900
+          overflow-y-auto bg-zinc-900 z-40
         `}
       >
         <div className="flex flex-col h-full bg-zinc-900">
