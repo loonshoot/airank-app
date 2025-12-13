@@ -5,7 +5,7 @@ const Menu = ({ data, isLoading = false, showMenu = false }) => {
   const { t } = useTranslation();
   return showMenu ? (
     <div className="space-y-2">
-      <h5 className="text-xl font-bold text-white">{t(data.name)}</h5>
+      <h5 className="text-xl font-bold text-white ml-[5px]">{t(data.name)}</h5>
       <ul className="leading-10">
         {data.menuItems.map((entry, index) => (
           <Item key={index} data={entry} isLoading={isLoading} />
