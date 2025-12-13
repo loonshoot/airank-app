@@ -18,6 +18,15 @@ const menu = (workspaceId) => [
         name: 'common.label.models',
         path: `/${workspaceId}/models`,
       },
+    ],
+  },
+  {
+    name: 'Admin',
+    menuItems: [
+      {
+        name: 'settings.team.management',
+        path: `/${workspaceId}/settings/team`,
+      },
       {
         name: 'settings.workspace.billing',
         path: `/${workspaceId}/settings/billing`,
