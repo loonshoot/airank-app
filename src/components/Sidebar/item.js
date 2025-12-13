@@ -7,10 +7,7 @@ const Item = ({ data = null, isLoading = false }) => {
 
   const handleClick = () => {
     if (data.onClick === 'logOut') {
-      const result = confirm('Are you sure you want to logout?');
-      if (result) {
-        signOut({ callbackUrl: '/' });
-      }
+      signOut({ callbackUrl: '/' });
     }
   };
 

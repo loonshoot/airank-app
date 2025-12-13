@@ -5,6 +5,7 @@ import Actions from './actions';
 import Menu from './menu';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image'
+import { noWorkspaceMenu } from '@/config/menu/index';
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -16,9 +17,18 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
   const memoizedMenu = useMemo(() => menu, [menu]);
 
   const renderMenu = () => {
-    // Don't render menu items on the account page
+    // On account page, show User menu only (with logout)
     if (isAccountPage) {
-      return null;
+      const userMenu = noWorkspaceMenu();
+      return userMenu.map((item, index) => (
+        <Menu
+          key={index}
+          data={item}
+          isLoading={false}
+          showMenu={true}
+          routerType={routerType}
+        />
+      ));
     }
 
     // Render menu immediately if we have a workspace slug from URL
@@ -87,11 +97,9 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
           {/* Menu Content */}
           <div className="flex-1 flex flex-col space-y-5 p-5">
             <Actions routerType={routerType} isAccountPage={isAccountPage} />
-            {!isAccountPage && (
-              <div className="flex flex-col space-y-10">
-                {renderMenu()}
-              </div>
-            )}
+            <div className="flex flex-col space-y-10">
+              {renderMenu()}
+            </div>
           </div>
         </div>
       </aside>
