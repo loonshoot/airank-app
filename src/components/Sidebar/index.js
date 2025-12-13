@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 
 import Actions from './actions';
 import Menu from './menu';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import Image from 'next/image'
-import { noWorkspaceMenu } from '@/config/menu/index';
+import Image from 'next/image';
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -18,12 +17,8 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
 
   // Separate User menu from other menus so we can pin it to the bottom
   const getMenuSections = () => {
-    let menuItems = memoizedMenu;
-
-    // On account page, use the noWorkspaceMenu
-    if (isAccountPage) {
-      menuItems = noWorkspaceMenu();
-    }
+    // Use the menu prop passed from the layout - it already handles workspace state
+    const menuItems = memoizedMenu;
 
     if (!menuItems || menuItems.length === 0) {
       return { mainMenus: [], userMenu: null };
