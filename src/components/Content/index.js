@@ -1,6 +1,6 @@
 const Content = ({ children }) => {
   return (
-    <div className="flex flex-col h-full px-5 pb-5 [&>*+*]:pt-5 overflow-y-auto md:p-10 md:w-3/4 bg-[#0a0a0a]">
+    <div className="flex flex-col flex-1 px-5 pb-5 [&>*+*]:pt-5 overflow-y-auto md:p-10 bg-[#0a0a0a]">
       {children}
     </div>
   );
