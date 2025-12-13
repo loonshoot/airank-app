@@ -43,7 +43,7 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
   return (
     <div className="md:w-1/4">
       {/* Logo and Mobile Menu Button */}
-      <div className="flex items-center justify-center p-4 border-b border-zinc-800/50 md:hidden bg-[#0a0a0a]">
+      <div className="flex items-center justify-center p-4 border-b border-zinc-800/50 md:hidden bg-zinc-900/50">
         <Link href="/" className="flex-grow text-2xl font-bold">
           <Image
             src="/images/logo-light.svg"
@@ -67,7 +67,7 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
         className={`
           fixed md:sticky top-[72px] md:top-0 w-full h-[calc(100vh-72px)] md:h-screen
           ${showMenu ? 'block' : 'hidden md:block'}
-          overflow-y-auto bg-[#0a0a0a]
+          overflow-y-auto bg-zinc-900/50
         `}
       >
         <div className="flex flex-col h-full">
