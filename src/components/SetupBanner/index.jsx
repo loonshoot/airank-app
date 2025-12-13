@@ -181,19 +181,11 @@ const SetupBanner = () => {
   // Show completion banner
   if (allConfigured) {
     return (
-      <div className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 border-l-4 border-green-500 p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-start gap-3">
-            <svg className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <div>
-              <h3 className="text-lg font-bold text-green-800 dark:text-green-200">Configuration Complete</h3>
-              <p className="mt-1 text-sm text-green-700 dark:text-green-300">
-                Your workspace is ready. Run your first report to see your personalized analytics.
-              </p>
-            </div>
-          </div>
+      <div className="sticky top-0 z-10 bg-green-800 py-2 px-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-white">
+            Your workspace is ready. Run your first report to see your personalized analytics.
+          </p>
           <Button
             background="Green"
             border="Light"
@@ -209,49 +201,41 @@ const SetupBanner = () => {
 
   // Show setup progress banner
   return (
-    <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border-l-4 border-blue-500 p-4">
-      <div className="flex items-start">
-        <div className="flex-shrink-0">
-          <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div className="ml-3 flex-1">
-          <h3 className="text-lg font-bold text-blue-800 dark:text-blue-200">Setup Your Workspace</h3>
-          <p className="mt-1 text-sm text-blue-700 dark:text-blue-300 mb-3">
-            Complete these steps to get your personalized ranking report
-          </p>
-          <div className="flex flex-wrap gap-3 items-center">
+    <div className="sticky top-0 z-10 bg-green-800 py-2 px-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-white">Complete these steps to get your personalized ranking report:</span>
+          <div className="flex items-center gap-3">
             <button
               onClick={() => window.location.href = `/${workspace?.slug}/brands`}
               className={`text-sm font-medium transition-all ${
                 workspaceConfig.hasOwnBrand
-                  ? 'line-through text-green-600 dark:text-green-400 cursor-default'
-                  : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 underline'
+                  ? 'line-through text-green-300 cursor-default'
+                  : 'text-white hover:text-green-200 underline'
               }`}
               disabled={workspaceConfig.hasOwnBrand}
             >
               Set Primary Brand
             </button>
-            <span className="text-blue-600 dark:text-blue-400">&gt;</span>
+            <span className="text-green-300">&gt;</span>
             <button
               onClick={() => window.location.href = `/${workspace?.slug}/models`}
               className={`text-sm font-medium transition-all ${
                 workspaceConfig.hasModels
-                  ? 'line-through text-green-600 dark:text-green-400 cursor-default'
-                  : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 underline'
+                  ? 'line-through text-green-300 cursor-default'
+                  : 'text-white hover:text-green-200 underline'
               }`}
               disabled={workspaceConfig.hasModels}
             >
               Configure Models
             </button>
-            <span className="text-blue-600 dark:text-blue-400">&gt;</span>
+            <span className="text-green-300">&gt;</span>
             <button
               onClick={() => window.location.href = `/${workspace?.slug}/prompts`}
               className={`text-sm font-medium transition-all ${
                 workspaceConfig.hasPrompts
-                  ? 'line-through text-green-600 dark:text-green-400 cursor-default'
-                  : 'text-blue-700 dark:text-blue-300 hover:text-blue-900 dark:hover:text-blue-100 underline'
+                  ? 'line-through text-green-300 cursor-default'
+                  : 'text-white hover:text-green-200 underline'
               }`}
               disabled={workspaceConfig.hasPrompts}
             >
