@@ -21,8 +21,11 @@ const AccountLayout = ({ children, routerType, isAccountPage = false }) => {
     }
   }, [status, router]);
 
-  // Use noWorkspaceMenu when no workspace is selected, otherwise use the full menu
-  const sidebarMenu = workspace?.slug ? menu(workspace.slug) : noWorkspaceMenu();
+  // On account pages, only show User menu (Account, Logout)
+  // On workspace pages, show full menu if workspace selected, otherwise just User menu
+  const sidebarMenu = isAccountPage
+    ? noWorkspaceMenu()
+    : (workspace?.slug ? menu(workspace.slug) : noWorkspaceMenu());
 
   if (status === 'loading') return <></>;
   return (
