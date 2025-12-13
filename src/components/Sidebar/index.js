@@ -110,14 +110,6 @@ const Sidebar = ({ menu, routerType, isAccountPage = false }) => {
           </div>
         </div>
       </aside>
-
-      {/* Overlay for mobile */}
-      {showMenu && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"
-          onClick={toggleMenu}
-        />
-      )}
     </div>
   );
 };
