@@ -16,11 +16,7 @@ const Header = () => {
   const { t } = useTranslation();
 
   const logOut = () => {
-    const result = confirm('Are you sure you want to logout?');
-
-    if (result) {
-      signOut({ callbackUrl: '/' });
-    }
+    signOut({ callbackUrl: '/' });
   };
 
   return (

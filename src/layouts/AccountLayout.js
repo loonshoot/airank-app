@@ -6,7 +6,7 @@ import Content from '@/components/Content/index';
 import Header from '@/components/Header/index';
 import Sidebar from '@/components/Sidebar/index';
 import SetupBanner from '@/components/SetupBanner/index';
-import menu from '@/config/menu/index';
+import menu, { noWorkspaceMenu } from '@/config/menu/index';
 import { useWorkspace } from '@/providers/workspace';
 import { useRouterContext } from '@/providers/router';
 
@@ -21,10 +21,13 @@ const AccountLayout = ({ children, routerType, isAccountPage = false }) => {
     }
   }, [status, router]);
 
+  // Use noWorkspaceMenu when no workspace is selected, otherwise use the full menu
+  const sidebarMenu = workspace?.slug ? menu(workspace.slug) : noWorkspaceMenu();
+
   if (status === 'loading') return <></>;
   return (
     <main className="flex flex-col w-screen h-screen text-light dark:text-light md:flex-row">
-      <Sidebar menu={menu(workspace?.slug)} routerType={routerType} isAccountPage={isAccountPage} />
+      <Sidebar menu={sidebarMenu} routerType={routerType} isAccountPage={isAccountPage} />
       <Content>
         <Header routerType={routerType} />
         <SetupBanner />

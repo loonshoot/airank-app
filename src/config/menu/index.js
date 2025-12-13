@@ -18,19 +18,10 @@ const menu = (workspaceId) => [
         name: 'common.label.models',
         path: `/${workspaceId}/models`,
       },
-    ],
-  },
-  {
-    name: 'Admin',
-    menuItems: [
-      {
-        name: 'settings.workspace.settings',
-        path: `/${workspaceId}/settings/general`,
-      },
       {
         name: 'settings.workspace.billing',
         path: `/${workspaceId}/settings/billing`,
-      }
+      },
     ],
   },
   {
@@ -48,4 +39,22 @@ const menu = (workspaceId) => [
   },
 ];
 
+// Menu for when no workspace is selected - only shows user options
+const noWorkspaceMenu = () => [
+  {
+    name: 'User',
+    menuItems: [
+      {
+        name: 'common.label.account',
+        path: `/account/settings`,
+      },
+      {
+        name: 'common.label.logout',
+        onClick: 'logOut'
+      }
+    ],
+  },
+];
+
 export default menu;
+export { noWorkspaceMenu };
