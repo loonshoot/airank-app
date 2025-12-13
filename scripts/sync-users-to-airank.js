@@ -9,7 +9,13 @@
  */
 
 const mongoose = require('mongoose');
-require('dotenv').config({ path: '.env.local' });
+
+// Only load dotenv if .env.local exists (for local dev)
+try {
+  require('dotenv').config({ path: '.env.local' });
+} catch (e) {
+  // dotenv not available, assume env vars are set
+}
 
 const mongoUri = process.env.MONGODB_URI;
 const mongoParams = process.env.MONGODB_PARAMS;
