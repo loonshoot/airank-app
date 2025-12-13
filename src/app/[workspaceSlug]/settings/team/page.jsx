@@ -585,7 +585,12 @@ export default function TeamPage({ params }) {
                         <td className="py-4">
                           <div className="flex flex-row items-center justify-start space-x-3">
                             <div className="flex flex-col">
-                              <h3 className="font-bold text-white">{member.name || 'Pending User'}</h3>
+                              <h3 className="font-bold text-white">
+                                {member.name || member.email?.split('@')[0] || 'Unknown User'}
+                                {member.status === InvitationStatus.PENDING && (
+                                  <span className="ml-2 text-xs text-yellow-500">(Pending Invite)</span>
+                                )}
+                              </h3>
                               <h4 className="text-gray-400 text-xs">{member.email}</h4>
                             </div>
                           </div>
