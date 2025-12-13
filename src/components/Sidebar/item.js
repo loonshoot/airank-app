@@ -12,9 +12,9 @@ const Item = ({ data = null, isLoading = false }) => {
   };
 
   return isLoading ? (
-    <div className="h-6 mb-3 bg-zinc-700 animate-pulse" />
+    <div className="h-6 mb-3 bg-zinc-700 animate-pulse ml-[5px]" />
   ) : (
-    <li>
+    <li className="ml-[5px]">
       {data.onClick ? (
         <a onClick={handleClick} className="text-white hover:text-gray-400 cursor-pointer transition-colors">
           {t(data.name)}
