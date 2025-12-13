@@ -2,8 +2,6 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import EmailProvider from 'next-auth/providers/email';
 import prisma from '@/prisma/index';
 import { sendMagicLinkEmail, sendWelcomeEmail } from '@/lib/server/mail';
-import { createPaymentAccount, getPayment } from '@/prisma/services/customer';
-const isProduction = process.env.NODE_ENV === 'production';
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -63,91 +61,19 @@ export const authOptions = {
     signIn: async ({ user, isNewUser }) => {
       console.log("Sign-in event:", { userId: user.id, isNewUser, email: user.email });
 
-      // Sync user to MongoDB airank.users collection
-      try {
-        const mongoose = require('mongoose');
-        const airankUri = `${process.env.MONGODB_URI}/airank?${process.env.MONGODB_PARAMS}`;
-        const airankDb = mongoose.createConnection(airankUri);
-        await airankDb.asPromise();
-
-        const usersCollection = airankDb.collection('users');
-        const membersCollection = airankDb.collection('members');
-
-        // Check if user already exists (to determine if this is truly a first login)
-        const existingUser = await usersCollection.findOne({ _id: user.id });
-        const isFirstLogin = !existingUser;
-
-        // Check if there's an existing user document with this email but different ID (created during invite)
-        const existingUserByEmail = await usersCollection.findOne({ email: user.email, _id: { $ne: user.id } });
-
-        // If there's an old user document created during invite, update member records to use the NextAuth user ID
-        if (existingUserByEmail) {
-          const updateResult = await membersCollection.updateMany(
-            { userId: existingUserByEmail._id },
-            { $set: { userId: user.id, updatedAt: new Date() } }
-          );
-          console.log("Updated member records from old userId to NextAuth userId:", {
-            oldUserId: existingUserByEmail._id,
-            newUserId: user.id,
-            updatedCount: updateResult.modifiedCount
+      // Send welcome email on first login
+      if (isNewUser) {
+        try {
+          await sendWelcomeEmail({
+            to: user.email,
+            name: user.name || user.email.split('@')[0],
+            email: user.email,
           });
-
-          // Delete the old user document (it was just a placeholder)
-          await usersCollection.deleteOne({ _id: existingUserByEmail._id });
-          console.log("Deleted placeholder user document:", existingUserByEmail._id);
+          console.log("Welcome email sent to new user:", user.email);
+        } catch (emailError) {
+          console.error("Failed to send welcome email:", emailError);
         }
-
-        // Upsert user (create or update)
-        await usersCollection.updateOne(
-          { _id: user.id },
-          {
-            $set: {
-              _id: user.id,
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              updatedAt: new Date()
-            },
-            $setOnInsert: {
-              createdAt: new Date(),
-              welcomeEmailSent: false
-            }
-          },
-          { upsert: true }
-        );
-
-        console.log("User synced to MongoDB:", { userId: user.id, email: user.email });
-
-        // Send welcome email on first login
-        if (isFirstLogin || isNewUser) {
-          try {
-            await sendWelcomeEmail({
-              to: user.email,
-              name: user.name || user.email.split('@')[0],
-              email: user.email,
-            });
-
-            // Mark welcome email as sent
-            await usersCollection.updateOne(
-              { _id: user.id },
-              { $set: { welcomeEmailSent: true, welcomeEmailSentAt: new Date() } }
-            );
-
-            console.log("Welcome email sent to new user:", user.email);
-          } catch (emailError) {
-            console.error("Failed to send welcome email:", emailError);
-          }
-        }
-
-        await airankDb.close();
-      } catch (error) {
-        console.error("Error syncing user to MongoDB:", error);
       }
-
-      // const customerPayment = await getPayment(user.email);
-      // if (isNewUser || customerPayment === null || user.createdAt === null) {
-      //   await Promise.all([createPaymentAccount(user.email, user.id)]);
-      // }
     },
   },
   providers: [
