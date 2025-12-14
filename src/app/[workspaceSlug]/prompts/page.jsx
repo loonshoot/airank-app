@@ -126,6 +126,8 @@ export default function PromptsPage({ params }) {
   // Check if user can add more prompts
   const canAddMorePrompts = () => {
     if (!entitlements) return true; // Allow if entitlements not loaded yet
+    // -1 means unlimited
+    if (entitlements.promptsLimit === -1) return true;
     return prompts.length < entitlements.promptsLimit;
   };
 
@@ -414,7 +416,7 @@ export default function PromptsPage({ params }) {
             {entitlements && !isLoading && (
               <div className="mt-6 pt-4 border-t border-gray-700">
                 <p className="text-sm text-gray-400">
-                  {prompts.length} of {entitlements.promptsLimit} prompts used
+                  {prompts.length} of {entitlements.promptsLimit === -1 ? 'Unlimited' : entitlements.promptsLimit} prompts used
                 </p>
               </div>
             )}
