@@ -4,8 +4,8 @@ import validate from '@/lib/server/validate';
 
 const rules = [
   check('name')
-    .isLength({ min: 1, max: 16 })
-    .withMessage('Name must be provided and must not exceed 16 characters'),
+    .isLength({ min: 1, max: 24 })
+    .withMessage('Name must be provided and must not exceed 24 characters'),
 ];
 
 const validateCreateWorkspace = initMiddleware(validate(rules));
