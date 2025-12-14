@@ -150,6 +150,11 @@ export default function ModelsPage({ params }) {
   // Check if model is allowed by entitlements
   const isModelAllowedByPlan = (modelId) => {
     if (!entitlements) return true; // Allow if entitlements not loaded yet
+    // -1 means unlimited - all models in allowed list are permitted
+    if (entitlements.modelsLimit === -1) {
+      const modelEntitlement = entitlements.modelsAllowed.find(m => m.modelId === modelId);
+      return modelEntitlement ? true : false;
+    }
     const modelEntitlement = entitlements.modelsAllowed.find(m => m.modelId === modelId);
     return modelEntitlement ? modelEntitlement.isAllowed : false;
   };
@@ -157,6 +162,8 @@ export default function ModelsPage({ params }) {
   // Check if model requires upgrade
   const doesModelRequireUpgrade = (modelId) => {
     if (!entitlements) return false;
+    // -1 means unlimited - no upgrades required for models in allowed list
+    if (entitlements.modelsLimit === -1) return false;
     const modelEntitlement = entitlements.modelsAllowed.find(m => m.modelId === modelId);
     return modelEntitlement ? modelEntitlement.requiresUpgrade : false;
   };
@@ -164,6 +171,8 @@ export default function ModelsPage({ params }) {
   // Check if user can add more models
   const canAddMoreModels = () => {
     if (!entitlements) return true; // Allow if entitlements not loaded yet
+    // -1 means unlimited
+    if (entitlements.modelsLimit === -1) return true;
     return entitlements.canAddModel;
   };
 
