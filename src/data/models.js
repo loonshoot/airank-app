@@ -8,7 +8,7 @@ export const AVAILABLE_MODELS = [
     tier: 'Basic'
   },
   {
-    id: 'claude-3-5-haiku-20241022',
+    id: 'claude-3-5-haiku@20241022',
     name: 'Claude 3.5 Haiku',
     provider: 'google',
     description: 'Fast and cost-effective Claude model',
@@ -31,7 +31,7 @@ export const AVAILABLE_MODELS = [
     tier: 'Professional'
   },
   {
-    id: 'claude-3-5-sonnet-20241022',
+    id: 'claude-3-5-sonnet-v2@20241022',
     name: 'Claude 3.5 Sonnet',
     provider: 'google',
     description: 'Balanced Claude model for most use cases',
@@ -55,7 +55,7 @@ export const AVAILABLE_MODELS = [
     warning: 'Very expensive - limit to 1 per Medium plan'
   },
   {
-    id: 'claude-haiku-4-5',
+    id: 'claude-haiku-4.5@20251001',
     name: 'Claude Haiku 4.5',
     provider: 'google',
     description: 'Latest Claude Haiku model',
@@ -97,6 +97,13 @@ export const AVAILABLE_MODELS = [
     name: 'Gemini 2.0 Flash',
     provider: 'google',
     description: 'Latest Gemini Flash model',
+    tier: 'Premium'
+  },
+  {
+    id: 'claude-sonnet-4-5@20250929',
+    name: 'Claude Sonnet 4.5',
+    provider: 'google',
+    description: 'Latest Claude Sonnet model with enhanced capabilities',
     tier: 'Premium'
   }
 ];
