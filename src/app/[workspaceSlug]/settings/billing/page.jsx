@@ -23,7 +23,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import Button from '@/components/Button/index';
 import toast from 'react-hot-toast';
-import { CheckIcon, CreditCardIcon, ChartBarIcon } from '@heroicons/react/24/solid';
+import { CheckIcon, CreditCardIcon, ChartBarIcon, DocumentTextIcon } from '@heroicons/react/24/solid';
 import { useStripe, useElements, CardElement, Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 
@@ -411,12 +411,31 @@ function ManageBillingView({ billingProfile, plans, onRefetch, isChangingPlan, s
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
-              <CreditCardIcon className="h-5 w-5 mr-2" />
+              {billingProfile.collectionMethod === 'send_invoice' ? (
+                <DocumentTextIcon className="h-5 w-5 mr-2" />
+              ) : (
+                <CreditCardIcon className="h-5 w-5 mr-2" />
+              )}
               Payment Method
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {billingProfile.hasPaymentMethod ? (
+            {billingProfile.collectionMethod === 'send_invoice' ? (
+              <div className="space-y-4">
+                <div className="flex items-center p-3 border border-border rounded-lg bg-blue-500/10">
+                  <DocumentTextIcon className="h-8 w-8 mr-3 text-blue-500" />
+                  <div>
+                    <p className="font-medium">Pay via Invoice</p>
+                    <p className="text-sm text-muted-foreground">
+                      Invoices will be sent to your billing email
+                    </p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Contact support to update your billing method
+                </p>
+              </div>
+            ) : billingProfile.hasPaymentMethod ? (
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-3 border border-border rounded-lg">
                   <div className="flex items-center">

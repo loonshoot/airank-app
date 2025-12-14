@@ -30,6 +30,7 @@ export const GET_BILLING_PROFILES = gql`
       paymentMethodBrand
       paymentMethodExpMonth
       paymentMethodExpYear
+      collectionMethod
       members {
         _id
         userId
