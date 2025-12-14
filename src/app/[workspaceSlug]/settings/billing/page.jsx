@@ -343,7 +343,7 @@ function ManageBillingView({ billingProfile, plans, onRefetch, isChangingPlan, s
   const currentPlanDetails = plans.find(p => p.id === billingProfile.currentPlan);
 
   const getUsagePercentage = (used, limit) => {
-    if (!limit || limit === 0 || limit === 999999) return 0;
+    if (!limit || limit === 0 || limit === 999999 || limit === -1) return 0;
     return Math.min((used / limit) * 100, 100);
   };
 
@@ -379,19 +379,19 @@ function ManageBillingView({ billingProfile, plans, onRefetch, isChangingPlan, s
               <div>
                 <p className="text-sm text-muted-foreground">Brands</p>
                 <p className="text-2xl font-bold">
-                  {billingProfile.brandsLimit === 999999 ? '∞' : billingProfile.brandsLimit}
+                  {billingProfile.brandsLimit === 999999 || billingProfile.brandsLimit === -1 ? 'Unlimited' : billingProfile.brandsLimit}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Prompts/Month</p>
                 <p className="text-2xl font-bold">
-                  {billingProfile.promptsLimit === 999999 ? '∞' : billingProfile.promptsLimit}
+                  {billingProfile.promptsLimit === 999999 || billingProfile.promptsLimit === -1 ? 'Unlimited' : billingProfile.promptsLimit}
                 </p>
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">AI Models</p>
                 <p className="text-2xl font-bold">
-                  {billingProfile.modelsLimit === 999999 ? '∞' : billingProfile.modelsLimit}
+                  {billingProfile.modelsLimit === 999999 || billingProfile.modelsLimit === -1 ? 'Unlimited' : billingProfile.modelsLimit}
                 </p>
               </div>
             </div>
@@ -468,7 +468,7 @@ function ManageBillingView({ billingProfile, plans, onRefetch, isChangingPlan, s
               Brand Usage
             </CardTitle>
             <CardDescription>
-              {billingProfile.brandsUsed} of {billingProfile.brandsLimit === 999999 ? '∞' : billingProfile.brandsLimit} brands used
+              {billingProfile.brandsUsed} of {billingProfile.brandsLimit === 999999 || billingProfile.brandsLimit === -1 ? 'Unlimited' : billingProfile.brandsLimit} brands used
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -499,7 +499,7 @@ function ManageBillingView({ billingProfile, plans, onRefetch, isChangingPlan, s
               Prompt Usage
             </CardTitle>
             <CardDescription>
-              {billingProfile.promptsUsed} of {billingProfile.promptsLimit === 999999 ? '∞' : billingProfile.promptsLimit} prompts used
+              {billingProfile.promptsUsed} of {billingProfile.promptsLimit === 999999 || billingProfile.promptsLimit === -1 ? 'Unlimited' : billingProfile.promptsLimit} prompts used
               {billingProfile.promptsResetDate && (
                 <span className="block mt-1">
                   Resets {new Date(billingProfile.promptsResetDate).toLocaleDateString()}
@@ -1141,19 +1141,19 @@ export default function BillingPage({ params }) {
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                      <span>{selectedPlan.brandsLimit} brand{selectedPlan.brandsLimit !== 1 ? 's' : ''}</span>
+                      <span>{selectedPlan.brandsLimit === -1 ? 'Unlimited brands' : `${selectedPlan.brandsLimit} brand${selectedPlan.brandsLimit !== 1 ? 's' : ''}`}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                      <span>{selectedPlan.promptsLimit} prompts/month</span>
+                      <span>{selectedPlan.promptsLimit === -1 ? 'Unlimited prompts/month' : `${selectedPlan.promptsLimit} prompts/month`}</span>
                     </li>
                     <li className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/>
                       </svg>
-                      <span>{selectedPlan.modelsLimit} AI model{selectedPlan.modelsLimit !== 1 ? 's' : ''}</span>
+                      <span>{selectedPlan.modelsLimit === -1 ? 'Unlimited AI models' : `${selectedPlan.modelsLimit} AI model${selectedPlan.modelsLimit !== 1 ? 's' : ''}`}</span>
                     </li>
                   </ul>
                   {selectedInterval === 'annual' && selectedPlan.annualPrice && (
