@@ -33,7 +33,7 @@ export default function AccountPage() {
   const [hasHydrated, setHasHydrated] = useState(false);
   const [showModal, setModalState] = useState(false);
   const [name, setName] = useState('');
-  const validName = name.length > 0 && name.length <= 16;
+  const validName = name.length > 0 && name.length <= 24;
 
   // GraphQL client and state
   const graphqlClient = useGraphQLClient();
