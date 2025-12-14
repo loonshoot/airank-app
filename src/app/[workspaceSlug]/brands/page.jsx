@@ -141,6 +141,8 @@ export default function BrandsPage({ params }) {
   // Check if user can add more brands (only counting competitor brands)
   const canAddMoreBrands = () => {
     if (!entitlements) return true; // Allow if entitlements not loaded yet
+    // -1 means unlimited
+    if (entitlements.brandsLimit === -1) return true;
     // Only count competitor brands - own brand doesn't count toward limit
     return competitorBrands.length < entitlements.brandsLimit;
   };
@@ -214,6 +216,8 @@ export default function BrandsPage({ params }) {
   // Check if a brand is over the limit
   const isBrandOverLimit = (index) => {
     if (!entitlements) return false;
+    // -1 means unlimited
+    if (entitlements.brandsLimit === -1) return false;
     // Only competitor brands count toward limit - own brand is free
     // Competitor brand at index 0 is position 1, index 1 is position 2, etc.
     const brandPosition = index + 1;
@@ -346,7 +350,8 @@ export default function BrandsPage({ params }) {
       const operations = [];
 
       // Only process competitor brands within the limit (own brand doesn't count)
-      const allowedBrandCount = entitlements ? entitlements.brandsLimit : competitorBrands.length;
+      // -1 means unlimited, so allow all brands
+      const allowedBrandCount = entitlements && entitlements.brandsLimit !== -1 ? entitlements.brandsLimit : competitorBrands.length;
       const brandsToSave = competitorBrands.slice(0, allowedBrandCount);
       const validCompetitorBrands = brandsToSave.filter(b => b.name.trim());
 
@@ -611,7 +616,7 @@ export default function BrandsPage({ params }) {
             {entitlements && !isLoading && (
               <div className="mt-6 pt-4 border-t border-gray-700">
                 <p className="text-sm text-gray-400">
-                  {competitorBrands.filter(b => b.name.trim()).length} of {entitlements.brandsLimit} competitor brands used
+                  {competitorBrands.filter(b => b.name.trim()).length} of {entitlements.brandsLimit === -1 ? 'Unlimited' : entitlements.brandsLimit} competitor brands used
                 </p>
               </div>
             )}
